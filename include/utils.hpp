@@ -16,17 +16,23 @@ You should have received a copy of the GNU General Public License
 along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBMONEY_UTILS_HPP
-#define LIBMONEY_UTILS_HPP
+#ifndef LIBCACHEMONEY_UTILS_HPP
+#define LIBCACHEMONEY_UTILS_HPP
 
 #include <cstdint>
+
 namespace utils {
-    uintptr_t get_page_start(uintptr_t address);
-    int has_privilege();
-    uintptr_t map_shared_object(const char *filename);
-    uint64_t get_memory_baseline_speed(uint64_t iterations = 10000);
-    uint64_t get_cache_baseline_speed(uint64_t iterations = 10000);
+    [[nodiscard]] uintptr_t get_page_start(uintptr_t address);
+
+    [[nodiscard]] int has_privilege();
+
+    [[nodiscard]] uintptr_t map_shared_object(const char *filename);
+
+    [[nodiscard]] uint64_t get_memory_baseline_speed(uint64_t iterations = 10000);
+
+    [[nodiscard]] uint64_t get_cache_baseline_speed(uint64_t iterations = 10000);
+
     void cycle_wait(uint64_t delay);
 }
 
-#endif //LIBMONEY_UTILS_HPP
+#endif

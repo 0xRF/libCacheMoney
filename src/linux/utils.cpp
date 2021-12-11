@@ -37,7 +37,7 @@ namespace utils {
     uintptr_t map_shared_object(const char *file) {
 
         int fd = open(file, O_RDONLY);
-        struct stat info;
+        struct stat info{};
 
         if (fstat(fd, &info) != 0) return 0;
 
@@ -77,7 +77,7 @@ namespace utils {
 
 
     void cycle_wait(uint64_t delay) {
-        uint64_t start_time = intrinsics::rdtscp64();
+        const uint64_t start_time = intrinsics::rdtscp64();
         while(intrinsics::rdtscp64() - start_time <= delay){}
     }
 }
