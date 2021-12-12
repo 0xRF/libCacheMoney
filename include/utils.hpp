@@ -24,7 +24,7 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 namespace utils {
     [[nodiscard]] uintptr_t get_page_start(uintptr_t address);
 
-    [[nodiscard]] int has_privilege();
+    [[nodiscard]] bool has_privilege();
 
     [[nodiscard]] uintptr_t map_shared_object(const char *filename);
 

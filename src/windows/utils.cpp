@@ -18,34 +18,25 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <unistd.h>
 #include <utils.hpp>
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <vector>
 #include "intrinsics.hpp"
+#include <windows.h>
 
 namespace utils {
     uintptr_t get_page_start(uintptr_t address) {
-        return address & ~(getpagesize() - 1);
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        return address & ~(si.dwPageSize - 1);
     }
 
-    int has_privilege() {
-        uid_t uid = getuid(), euid = geteuid();
-        return (euid <= 0 || uid != euid);
+    bool has_privilege() {
+        return false; //TODO IMPLEMENT
     }
 
     uintptr_t map_shared_object(const char *file) {
-
-        int fd = open(file, O_RDONLY);
-        struct stat info{};
-
-        if (fstat(fd, &info) != 0) return 0;
-
-        auto mapped_address = (uintptr_t) mmap(nullptr, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
-        close(fd);
-
-        return mapped_address;
+        return 0; //TOOD Implement
     }
 
 }
