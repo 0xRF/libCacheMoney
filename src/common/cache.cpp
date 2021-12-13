@@ -16,36 +16,28 @@ You should have received a copy of the GNU General Public License
 along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <unistd.h>
+#include <cache.hpp>
 #include <utils.hpp>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include <intrinsics.hpp>
 #include <vector>
-#include "intrinsics.hpp"
 
-namespace utils {
-    uintptr_t get_page_start(uintptr_t address) {
-        return address & ~(getpagesize() - 1);
+namespace cache{
+
+    size_t get_total_cache_size() {
+        return 512*1024; //TODO IMPLEMENT
     }
 
-    bool has_privilege() {
-        uid_t uid = getuid(), euid = geteuid();
-        return (euid <= 0 || uid != euid);
+    size_t get_l1_cache_size(){
+        uint64_t l1_speed = utils::get_cache_baseline_speed();
+        size_t cacheSize = get_total_cache_size();
+        char* buffer = new char[cacheSize];
+        for(int i = 0; i < cacheSize; i++){
+            uint64_t time = intrinsics::memaccesstime((uintptr_t)buffer + i);
+            if(time > l1_speed + 40)
+                return i;
+        }
     }
-
-    uintptr_t map_shared_object(const char *file) {
-
-        int fd = open(file, O_RDONLY);
-        struct stat info{};
-
-        if (fstat(fd, &info) != 0) return 0;
-
-        auto mapped_address = (uintptr_t) mmap(nullptr, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
-        close(fd);
-
-        return mapped_address;
-    }
+    size_t get_l2_cache_size(){}
+    size_t get_l3_cache_size(){}
 
 }

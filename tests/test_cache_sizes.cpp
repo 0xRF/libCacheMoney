@@ -16,27 +16,16 @@ you should have received a copy of the gnu general public license
 along with libcachemoney.  if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utils.hpp>
-#include <intrinsics.hpp>
-#include <attacks/flush_reload.hpp>
+#include <cache.hpp>
 #include <iostream>
-#include <cassert>
 
-using namespace cache_money;
+int main(int argc, char** argv){
 
-int main(int argc, char **argv) {
 
-    auto targetAddress = (uintptr_t *) malloc(8);
-    flush_reload fr((uintptr_t) targetAddress);
+   size_t l1 = cache::get_l1_cache_size();
 
-    ///Should fail as the address the target address is being cleared from the cache
-    assert(fr.attack(10, {}, nullptr, 80000) == false);
+   std::cout << l1 << std::endl;
 
-    //Should SUCCEED AS THE TRIGGER FUNCTION WILL BE CONSTANTLY CALLED RELOADING TARGET ADDRESS IN CACHE
-    auto trigger = [&]() -> void {
-        *targetAddress += 1;
-    };
-    assert(fr.attack(10, {}, trigger) == true);
 
-    return EXIT_SUCCESS;
+    return 0;
 }
