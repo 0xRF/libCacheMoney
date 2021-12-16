@@ -16,36 +16,40 @@ You should have received a copy of the GNU General Public License
 along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "intrinsics.hpp"
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <utils.hpp>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <vector>
-#include "intrinsics.hpp"
 
 namespace utils {
-    uintptr_t get_page_start(uintptr_t address) {
-        return address & ~(getpagesize() - 1);
-    }
 
-    bool has_privilege() {
-        uid_t uid = getuid(), euid = geteuid();
-        return (euid <= 0 || uid != euid);
-    }
-
-    uintptr_t map_shared_object(const char *file) {
-
-        int fd = open(file, O_RDONLY);
-        struct stat info{};
-
-        if (fstat(fd, &info) != 0) return 0;
-
-        auto mapped_address = (uintptr_t) mmap(nullptr, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
-        close(fd);
-
-        return mapped_address;
-    }
-
+bool is_page_start(uintptr_t address) { return address % getpagesize(); }
+uintptr_t get_page_start(uintptr_t address) {
+  return address & ~(getpagesize() - 1);
 }
+
+bool has_privilege() {
+  uid_t uid = getuid(), euid = geteuid();
+  return (euid <= 0 || uid != euid);
+}
+
+uintptr_t map_shared_object(const char *file) {
+
+  int fd = open(file, O_RDONLY);
+  struct stat info {};
+
+  if (fstat(fd, &info) != 0)
+    return 0;
+
+  auto mapped_address =
+      (uintptr_t)mmap(nullptr, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+  close(fd);
+
+  return mapped_address;
+}
+
+} // namespace utils

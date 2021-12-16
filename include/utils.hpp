@@ -22,17 +22,17 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 
 namespace utils {
-    [[nodiscard]] uintptr_t get_page_start(uintptr_t address);
+[[nodiscard]] uintptr_t get_page_start(uintptr_t address);
+[[nodiscard]] bool is_page_start(uintptr_t address);
 
-    [[nodiscard]] bool has_privilege();
 
-    [[nodiscard]] uintptr_t map_shared_object(const char *filename);
+[[nodiscard]] bool has_privilege();
 
-    [[nodiscard]] uint64_t get_memory_baseline_speed(uint64_t iterations = 10000);
+[[nodiscard]] uintptr_t map_shared_object(const char *filename);
 
-    [[nodiscard]] uint64_t get_cache_baseline_speed(uint64_t iterations = 10000);
+[[nodiscard]] uint64_t get_memory_baseline_speed(uint64_t iterations = 10000);
 
-    void cycle_wait(uint64_t delay);
-}
+void cycle_wait(uint64_t delay);
+} // namespace utils
 
 #endif

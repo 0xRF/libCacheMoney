@@ -18,9 +18,9 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <utils.hpp>
 #include <iostream>
-
+#include <l1.hpp>
 int main(int argc, char **argv) {
-    uint64_t cache_speed = utils::get_cache_baseline_speed();
+    uint64_t cache_speed = cache::l1::speed();
     uint64_t memory_speed = utils::get_memory_baseline_speed();
     std::cout << "Memory Speed " << memory_speed << std::endl;
     std::cout << "Cache Speed " << cache_speed << std::endl;

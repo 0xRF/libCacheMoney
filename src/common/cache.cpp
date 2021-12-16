@@ -23,21 +23,4 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace cache{
 
-    size_t get_total_cache_size() {
-        return 512*1024; //TODO IMPLEMENT
-    }
-
-    size_t get_l1_cache_size(){
-        uint64_t l1_speed = utils::get_cache_baseline_speed();
-        size_t cacheSize = get_total_cache_size();
-        char* buffer = new char[cacheSize];
-        for(int i = 0; i < cacheSize; i++){
-            uint64_t time = intrinsics::memaccesstime((uintptr_t)buffer + i);
-            if(time > l1_speed + 40)
-                return i;
-        }
-    }
-    size_t get_l2_cache_size(){}
-    size_t get_l3_cache_size(){}
-
 }

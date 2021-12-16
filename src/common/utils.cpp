@@ -34,22 +34,10 @@ namespace utils {
         return *std::min_element(times.begin(), times.end());
     }
 
-    uint64_t get_cache_baseline_speed(uint64_t iterations) {
-        auto times = std::vector<uint64_t>();
-        auto pTest = new uintptr_t;
-        uintptr_t page_start = utils::get_page_start((uintptr_t) pTest);
-
-        for (uint64_t i = 0; i < iterations; i++) {
-            uint64_t time = intrinsics::memaccesstime(page_start);
-            times.push_back(time);
-        }
-        delete pTest;
-        return *std::min_element(times.begin(), times.end());
-    }
-
 
     void cycle_wait(uint64_t delay) {
         const uint64_t start_time = intrinsics::rdtscp64();
         while (intrinsics::rdtscp64() - start_time <= delay) {}
     }
+
 }

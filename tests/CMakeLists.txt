@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(tests)
 
 set(CMAKE_C_STANDARD 23)
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 include(CTest)
 
 function(create_test TEST_NAME)

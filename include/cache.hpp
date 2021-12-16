@@ -22,9 +22,5 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 
 namespace cache{
-    size_t get_total_cache_size();
-    size_t get_l1_cache_size();
-    size_t get_l2_cache_size();
-    size_t get_l3_cache_size();
 }
 #endif //LIBCACHEMONEY_CACHE_HPP
