@@ -7,12 +7,14 @@
 
 #include <cstddef>
 #include <cstdint>
-namespace cache {
-namespace l1 {
-size_t size();
-uint64_t speed(uint64_t iterations = 10000);
-size_t line_size();
-bool is_start_of_cache_line(uintptr_t address);
-} // namespace l1
-} // namespace cache
+
+namespace cache::l1 {
+        uint64_t speed(uint64_t iterations = 10000);
+        bool is_start_of_cache_line(uintptr_t address);
+        size_t size();
+        size_t line_size();
+        size_t assoc();
+        size_t set_size();
+        size_t set_count();
+    } // namespace cache
 #endif // LIBCACHEMONEY_L1_HPP

@@ -26,7 +26,8 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace utils {
 
-bool is_page_start(uintptr_t address) { return address % getpagesize(); }
+bool is_page_start(uintptr_t address) { return address % getpagesize() == 0; }
+
 uintptr_t get_page_start(uintptr_t address) {
   return address & ~(getpagesize() - 1);
 }

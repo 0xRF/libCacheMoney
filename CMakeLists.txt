@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(libCacheMoney)
 
 set(CMAKE_CXX_STANDARD 20)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 
 if (UNIX)
     set(PLATFORM_DIR linux)
