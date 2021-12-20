@@ -54,28 +54,43 @@ inline void memsett (uintptr_t buffer)
   asm("rep stosb");
 }
 
-int main ()
-{
-  auto true_buffer_start = (uintptr_t)malloc (1024 * 1024);
-  auto address = utils::get_aligned_address (true_buffer_start, get_array_size());
-  if (get_array_size () - (true_buffer_start - address) < l1::size ())
-	{
-	  std::cout << "Failed to properly map address" << std::endl;
-	  return EXIT_FAILURE;
-	}
 
-  auto cache_mapping = prime_probe::generate_mapped_addresses (address, true_buffer_start, get_array_size ());
-  size_t RCX = 0;
-  size_t RBX = 0;
-  size_t ASSOC = l1::assoc ();
-  size_t SET_COUNT = l1::set_count ();
-  size_t ITER = 0;
+uintptr_t get_aligned_address(uintptr_t buffer) {
+    for (uintptr_t address = buffer; address < buffer + get_array_size();
+         address++) {
+        if (utils::is_page_start(address) && l1::is_start_of_cache_line(address) &&
+            utils::get_address_set(address) == 0)
+            return address;
+    }
+    return 0;
+}
 
-  auto baseline = l1::speed ();
+int main() {
+    auto true_buffer_start = (uintptr_t) malloc(1024*1024);
+    auto address = get_aligned_address(true_buffer_start);
+    if (get_array_size() - (true_buffer_start - address) < l1::size()) {
+        std::cout << "Failed to properly map address" << std::endl;
+        return EXIT_FAILURE;
+    }
 
-  const size_t SAMPLES = 10000;
-  auto timing =
-	  std::array<std::array<std::array<uint32_t, 8>, 64>, SAMPLES> ();
+    auto cache_mapping = prime_probe::generate_mapped_addresses(address, true_buffer_start, get_array_size());
+
+//    register size_t RCX asm("rcx") = 0;
+//    register size_t RBX asm("rbx") = 0;
+//    register size_t ASSOC asm("r8") = l1::assoc();
+//    register size_t LINE_SIZE asm("r9") = l1::line_size();
+//    register size_t SET_COUNT asm("r10") = l1::set_count();
+    size_t RCX = 0;
+    size_t RBX = 0;
+    size_t ASSOC = l1::assoc();
+    size_t SET_COUNT = l1::set_count();
+    size_t ITER = 0;
+
+    auto baseline = l1::speed();
+
+    const size_t SAMPLES = 10000;
+    auto timing =
+            std::array<std::array<std::array<uint32_t, 8>, 64>, SAMPLES>();
 
   memsett (address);
 
@@ -93,20 +108,17 @@ int main ()
 		}
 	}
 
-  for (RCX = 0; RCX < SET_COUNT; RCX++)
-	{
-	  for (RBX = 0; RBX < ASSOC; RBX++)
-		{
-		  uint64_t avg = 0;
-		  for (ITER = 0; ITER < SAMPLES; ITER++)
-			{
-			  avg += timing[ITER][RCX][RBX];
-			}
-		  avg = avg / SAMPLES;
-		  std::cout << avg << " ";
-		}
-	  std::cout << std::endl;
-	}
+        for (RCX = 0; RCX < SET_COUNT; RCX++) {
+            for (RBX = 0; RBX < ASSOC; RBX++) {
+                uint64_t avg = 0;
+                for(ITER = 0; ITER < SAMPLES; ITER++){
+                    avg+=timing[ITER][RCX][RBX];
+                }
+                avg = avg/SAMPLES;
+                std::cout << avg << " ";
+            }
+            std::cout << std::endl;
+        }
 //loop through all cache sets, clear and measure time to read the addresses
 
   return 0;
