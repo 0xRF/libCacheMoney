@@ -31,5 +31,19 @@ int main (void)
 	  utils::cycle_wait (10);
 	}
 
+  for (uint64_t set = 0; set < l1::set_count (); set++)
+	{
+
+	  uint64_t avg = 0;
+	  for (uint64_t block = 0; block < l1::assoc (); block++)
+		{
+		  for (int i = 0; i < SAMPLES; i++)
+			{
+			  std::cout << (*times)[i][set][block] << ((i < SAMPLES - 1) ? " " : "");
+			}
+		  std::cout << std::endl;
+		}
+	}
+
   return 0;
 }
