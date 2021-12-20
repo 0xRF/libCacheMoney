@@ -47,6 +47,15 @@ namespace utils {
         }
     }
 
+	uintptr_t get_aligned_address (uintptr_t buffer, size_t size)
+	{
+	  for (uintptr_t address = buffer; address < buffer + size; address++)
+		if (utils::is_page_start (address) && cache::l1::is_start_of_cache_line (address) && get_address_set (address) == 0)
+		  return address;
+
+	  return 0;
+	}
+
 //    size_t get_cache_set_outdated(uintptr_t address) {
 //        auto bits = std::bitset<sizeof(uintptr_t) * 8>(address);
 //        auto computed = (bits & get_index_bitmask());

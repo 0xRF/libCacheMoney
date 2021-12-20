@@ -9,18 +9,20 @@ if (UNIX)
 else ()
     set(PLATFORM_DIR windows)
 endif()
+
 add_library(libCacheMoney SHARED
         src/${PLATFORM_DIR}/utils.cpp
         src/${PLATFORM_DIR}/intrinsics.cpp
 
         src/common/utils.cpp
         src/common/flush_reload.cpp
+        src/common/prime_probe.cpp
         src/common/cache.cpp
         src/common/l1.cpp
 )
 
 target_include_directories(libCacheMoney PRIVATE include)
 
-add_subdirectory(victims)
+#add_subdirectory(victims)
 enable_testing()
 add_subdirectory(tests)

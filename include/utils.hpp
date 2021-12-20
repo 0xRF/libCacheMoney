@@ -40,6 +40,9 @@ namespace utils {
     uint64_t get_address_set(uintptr_t address);
 
     uint64_t get_address_tag(uintptr_t address);
+
+	uintptr_t get_aligned_address (uintptr_t buffer, size_t size);
+
 } // namespace utils
 
 #endif
