@@ -55,6 +55,13 @@ inline void clflush(uintptr_t address) {
   asm("cpuid");
   asm("clflush (%0)" ::"r"(address));
 }
+
+inline void prefetch0(uintptr_t address){
+    asm("cpuid");
+//    asm("PREFETCH0 %0" ::"r"(address));
+//TODO implement
+}
+
 } // namespace intrinsics
 
 #endif // LIBMONEY_INTRINSICS_H

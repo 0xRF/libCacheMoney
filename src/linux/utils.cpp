@@ -26,31 +26,32 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace utils {
 
-bool is_page_start(uintptr_t address) { return address % getpagesize() == 0; }
+    bool is_page_start(uintptr_t address) { return address % getpagesize() == 0; }
 
-uintptr_t get_page_start(uintptr_t address) {
-  return address & ~(getpagesize() - 1);
-}
+    uintptr_t get_page_start(uintptr_t address) {
+        return address & ~(getpagesize() - 1);
+    }
 
-bool has_privilege() {
-  uid_t uid = getuid(), euid = geteuid();
-  return (euid <= 0 || uid != euid);
-}
+    bool has_privilege() {
+        uid_t uid = getuid(), euid = geteuid();
+        return (euid <= 0 || uid != euid);
+    }
 
-uintptr_t map_shared_object(const char *file) {
+    uintptr_t map_shared_object(const char *file) {
 
-  int fd = open(file, O_RDONLY);
-  struct stat info {};
+        int fd = open(file, O_RDONLY);
+        struct stat info{};
 
-  if (fstat(fd, &info) != 0)
-    return 0;
+        if (fstat(fd, &info) != 0)
+            return 0;
 
-  auto mapped_address =
-      (uintptr_t)mmap(nullptr, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+        auto mapped_address =
+                (uintptr_t) mmap(nullptr, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
-  close(fd);
+        close(fd);
 
-  return mapped_address;
-}
+        return mapped_address;
+    }
+
 
 } // namespace utils

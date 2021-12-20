@@ -21,5 +21,6 @@ add_library(libCacheMoney SHARED
 
 target_include_directories(libCacheMoney PRIVATE include)
 
+add_subdirectory(victims)
 enable_testing()
 add_subdirectory(tests)
