@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(victims)
 
-set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD 20)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 
 function(create_victim VICTIM_NAME)

@@ -73,7 +73,8 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    auto cache_mapping = prime_probe::generate_mapped_addresses(address, true_buffer_start, get_array_size());
+    prime_probe pp;
+    auto cache_mapping = pp.generate_mapped_addresses(address, true_buffer_start, get_array_size());
 
 //    register size_t RCX asm("rcx") = 0;
 //    register size_t RBX asm("rbx") = 0;
