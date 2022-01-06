@@ -10,6 +10,7 @@
 #include <utils.hpp>
 #include <iostream>
 #include <intrinsics.hpp>
+#include <numeric>
 
 using namespace cache_money;
 using namespace cache;
@@ -29,9 +30,16 @@ using namespace std;
 //		}
 //	}
 //}
-array<array<uintptr_t, 8>, 64>
-prime_probe::generate_mapped_addresses(uintptr_t address, uintptr_t true_start, size_t array_size) {
-    auto cache_sets = array<array<uintptr_t, 8>, 64>();
+
+prime_probe::prime_probe() : m_mapped(vector<vector<uintptr_t>>(l1::set_count(), vector<uintptr_t>(l1::assoc()))),
+                             m_buffer_size(l1::size() * 2) {
+    m_buffer = malloc(m_buffer_size);
+    generate_mapped_addresses();
+}
+
+void prime_probe::generate_mapped_addresses() {
+
+    auto address = utils::get_aligned_address((uintptr_t) m_buffer, m_buffer_size);
 
     for (size_t cache_set = 0; cache_set < cache::l1::set_count(); cache_set++) {
         uintptr_t ptr = address;
@@ -43,15 +51,14 @@ prime_probe::generate_mapped_addresses(uintptr_t address, uintptr_t true_start, 
                 ptr += sizeof(uintptr_t);
                 tag = utils::get_address_tag(ptr);
 
-                if (ptr > true_start + array_size)
-                    throw;
+                if (ptr > (uintptr_t) m_buffer + m_buffer_size)
+                    throw std::runtime_error("Out of bounds");
             }
-            cache_sets[cache_set][block] = ptr;
+            m_mapped[cache_set][block] = ptr;
             tags.push_back(tag);
             ptr += sizeof(uintptr_t);
         }
     }
-    return cache_sets;
 }
 
 //array<array<array<pair<uint32_t, uint64_t>, 8>, 64>, prime_probe::SAMPLES>* prime_probe::probe() {
@@ -100,24 +107,63 @@ prime_probe::generate_mapped_addresses(uintptr_t address, uintptr_t true_start, 
 //    }
 //    return pair<vector<uint32_t>, vector<uint64_t>>(memtimes, cycles);
 //}
-vector<vector<uint32_t>> prime_probe::probe(uint64_t epoch) {
-    if (epoch == 0)
-        epoch = intrinsics::rdtscp64();
 
-    size_t array_size = 1024 * 1024;
-    auto buffer = (uintptr_t) malloc(array_size);
-    auto address = utils::get_aligned_address(buffer, array_size);
-    auto mapped = generate_mapped_addresses(address, buffer, array_size);
-    auto timings = vector<vector<uint32_t>>(l1::set_count() * l1::assoc() * SAMPLES);
+std::vector<bool>
+prime_probe::probe(const std::vector<double> &minTimes, uint64_t slotInitial, uint64_t slot, [[maybe_unused]] uint64_t epoch) {
+
+    utils::cycle_wait(slotInitial);
+    auto timings = vector<vector<uint32_t>>(l1::set_count() * l1::assoc(),
+                                            std::vector<uint32_t>(SAMPLES));
+    for (int i = 0; i < SAMPLES; i++) {
+        for (uint64_t set = 0; set < l1::set_count(); set++)
+            for (uint64_t block = 0; block < l1::assoc(); block++) {
+                timings[set * l1::set_count() + block][i] = intrinsics::memaccesstime(m_mapped[set][block]);
+            }
+
+        utils::cycle_wait(slot);
+    }
+
+
+    std::vector<double> averages(SAMPLES);
+    std::for_each(timings.begin(), timings.end(), [&](auto line) {
+        averages.push_back(std::accumulate(line.begin(), line.end(), 0.0) / line.size());
+    });
+
+    auto bools = vector<bool>(l1::set_count() * l1::assoc());
+    for (uint64_t set = 0; set < l1::set_count(); set++)
+        for (uint64_t block = 0; block < l1::assoc(); block++)
+            bools[set * l1::set_count() + block] =
+                    averages[set * l1::set_count() + block] > minTimes[set * l1::set_count() + block];
+
+    return bools;
+}
+
+vector<double> prime_probe::prime() {
+
+    //Read the time to reload the line back into the cache there
+    // TODO add prefetch
+    for (const auto &block: m_mapped)
+        for (const auto &line: block)
+            intrinsics::memaccesstime(line);
+
+    auto timings = vector<vector<uint32_t>>(l1::set_count() * l1::assoc(),
+                                            vector<uint32_t>(SAMPLES));
+
 
     for (int i = 0; i < SAMPLES; i++) {
         for (uint64_t set = 0; set < l1::set_count(); set++)
             for (uint64_t block = 0; block < l1::assoc(); block++) {
-                timings[i][set * l1::set_count() + block] = intrinsics::memaccesstime(mapped[set][block]);
+                timings[set * l1::set_count() + block][i] = intrinsics::memaccesstime(m_mapped[set][block]);
             }
 
         utils::cycle_wait(10);
     }
-    return timings;
+
+    std::vector<double> averages(SAMPLES);
+    std::for_each(timings.begin(), timings.end(), [&](auto line) {
+        averages.push_back(std::accumulate(line.begin(), line.end(), 0.0) / line.size());
+    });
+
+    return averages;
 //    return pair<vector<uint32_t>, vector<uint64_t>>(memtimes, cycles);
 }

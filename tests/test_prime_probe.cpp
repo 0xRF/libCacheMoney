@@ -9,6 +9,7 @@
 #include <intrinsics.hpp>
 #include <iostream>
 #include <fstream>
+#include <meta_cache.hpp>
 
 #include <victim_prime_probe.hpp>
 
@@ -23,25 +24,14 @@ int main(void) {
     prime_probe pp;
     uint64_t epoch = intrinsics::rdtscp64();
 
-    cout << "Starting Probe" << endl;
-    auto memtimes = pp.probe(epoch);
 
-    std::vector<std::vector<double>> mapped{};
-    for (auto times: memtimes) {
-        auto doubs = std::vector<double>{};
-        for (auto time: times) {
-            doubs.push_back((double) time);
-        }
-        mapped.push_back(doubs);
-    }
+    auto primed = pp.prime();
 
-    uint64_t fin = intrinsics::rdtscp64();
-    cout << "Finished Probe" << endl;
-    uint64_t speed = l1::speed();
+    auto memtimes = pp.probe(primed, 1000, 10);
 
-    victims::prime_probe_weak_alg alg;
+//    victims::prime_probe_weak_alg alg;
     char arr[8] = "ABCDEFG";
-    alg.trigger(arr);
+//    alg.trigger(arr);
 
 //    matplot::hold(matplot::on);
 //    matplot::scatter(mapped);
