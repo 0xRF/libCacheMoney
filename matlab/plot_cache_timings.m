@@ -18,16 +18,10 @@ for sample=1:SAMPLES
     end
 end
 
-
 OUT = zeros(ASSOC, SET_COUNT);
 for j=1:ASSOC
     for k=1:SET_COUNT
-        avg = 0;
-        for sample=1:SAMPLES
-            avg = avg + DATA(sample, j, k);
-        end
-        avg = avg/SAMPLES;
-        OUT(j,k) = avg;
+        OUT(j,k) = mean(DATA(:, j,k));
     end
 end
 

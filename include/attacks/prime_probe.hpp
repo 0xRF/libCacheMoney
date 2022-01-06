@@ -22,17 +22,25 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <cstddef>
 #include <array>
+#include <vector>
 
-namespace cache_money
-{
-	class prime_probe {
-	 public:
 
-	  std::array<std::array<uintptr_t, 8>, 64>
-	  generate_mapped_addresses (uintptr_t address, uintptr_t true_start, size_t array_size);
+namespace cache_money {
+    class prime_probe {
+    public:
 
-	 private:
-	};
+        static const uint64_t SAMPLES = 50;
+
+        std::array<std::array<uintptr_t, 8>, 64>
+        generate_mapped_addresses(uintptr_t address, uintptr_t true_start, size_t array_size);
+
+//        std::array<std::array<std::array<std::pair<uint32_t, uint64_t>, 8>, 64>, SAMPLES> *probe();
+
+//        std::pair<std::vector<uint32_t>, std::vector<uint64_t>> probe(uint64_t epoch = 0);
+          std::vector<std::vector<uint32_t>> probe(uint64_t epoch = 0);
+
+    private:
+    };
 }
 
 #endif //LIBMONEY_PRIME_PROBE_HPP

@@ -1,16 +1,23 @@
-#include <l1.hpp>
-#include <utils.hpp>
+#include <random>
 #include <cstdio>
-int main(void){
+#include <vector>
+#include <iostream>
+#include "include/victim_prime_probe.hpp"
 
-    char super_secret[10] = { 'C', 'T', 'F', '{', 'M', 'E', 'M','E', '}', '\n'};
 
-    while(true) {
-        for (int i = 0; i < 10; i++) {
-            int val = super_secret[i];
-            putchar(val);
+namespace victims {
+
+    prime_probe_weak_alg::prime_probe_weak_alg() {
+        m_sBox = (uint8_t *) malloc(sizeof(CacheLine) * 8);
+        m_lines = (CacheLine *) m_sBox;
+        std::shuffle(m_secretKey.begin(), m_secretKey.end(), std::mt19937(std::random_device()()));
+        for (int i = 0; i < 8; i++) {
+            m_lines[i].bytes[0] = 7 - i;
         }
     }
 
-    return 0;
+    void prime_probe_weak_alg::trigger(char array[8]) {
+        for (int i = 0; i < 8; i++)
+            array[i] = array[i] ^ m_lines[m_secretKey[i]].bytes[0];
+    }
 }

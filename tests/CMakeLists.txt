@@ -1,16 +1,28 @@
 cmake_minimum_required(VERSION 3.20)
 project(tests)
 
-set(CMAKE_C_STANDARD 20)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
+include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
 include(CTest)
+
+
+set(CMAKE_CXX_STANDARD 23)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
+
+CPMAddPackage(
+        NAME matplot
+        GITHUB_REPOSITORY alandefreitas/matplotplusplus
+        GIT_TAG  v1.1.0
+        OPTIONS
+)
+target_compile_features(matplot PUBLIC cxx_std_17)
 
 function(create_test TEST_NAME)
     add_executable(${TEST_NAME} ${TEST_NAME}.cpp)
-    target_link_libraries(${TEST_NAME} libCacheMoney)
-    target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_HOME_DIRECTORY}/include)
+    target_link_libraries(${TEST_NAME} PUBLIC libCacheMoney matplot)
+    target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_HOME_DIRECTORY}/include ${CMAKE_HOME_DIRECTORY}/victims/include)
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     message(STATUS "Creating Test ${TEST_NAME}")
+
 endfunction()
 
 file(GLOB TEST_FILES "test_*.cpp")

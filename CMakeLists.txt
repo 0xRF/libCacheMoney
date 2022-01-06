@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
+
 project(libCacheMoney)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -13,7 +14,6 @@ endif()
 add_library(libCacheMoney SHARED
         src/${PLATFORM_DIR}/utils.cpp
         src/${PLATFORM_DIR}/intrinsics.cpp
-
         src/common/utils.cpp
         src/common/flush_reload.cpp
         src/common/prime_probe.cpp
@@ -23,6 +23,6 @@ add_library(libCacheMoney SHARED
 
 target_include_directories(libCacheMoney PRIVATE include)
 
-#add_subdirectory(victims)
+add_subdirectory(victims)
 enable_testing()
 add_subdirectory(tests)

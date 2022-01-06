@@ -57,9 +57,9 @@ int main(void) {
     asm("rep stosb");
 
 //    8 x 32 KB 8-way set associative instruction caches
-//    Hence 64 bit cache lines, 8 asosciates per cache
+//    Hence 64 bit cache gLines, 8 asosciates per cache
 
-    //walk cache lines
+    //walk cache gLines
 //    for (i = 0; i < size; i++)
 
     return 0;
