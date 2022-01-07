@@ -41,8 +41,13 @@ namespace utils {
         while (intrinsics::rdtscp64() - start_time <= delay) {}
     }
 
-    void prefetch_range(uintptr_t start, size_t size) {
+    void prefetch(uintptr_t start, size_t size) {
         for (uintptr_t ptr = start; ptr < start + sizeof(uintptr_t) * size; ptr += sizeof(uintptr_t)) {
+            intrinsics::prefetch0(ptr);
+        }
+    }
+    void prefetch_range(uintptr_t start, uintptr_t end) {
+        for (uintptr_t ptr = start; ptr < end; ptr += sizeof(uintptr_t)) {
             intrinsics::prefetch0(ptr);
         }
     }

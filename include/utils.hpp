@@ -33,7 +33,8 @@ namespace utils {
 
     [[nodiscard]] uint64_t get_memory_baseline_speed(uint64_t iterations = 10000);
 
-    void prefetch_range(uintptr_t start, size_t size);
+    void prefetch(uintptr_t start, size_t size);
+    void prefetch_range(uintptr_t start, uintptr_t end);
 
     void cycle_wait(uint64_t delay);
 

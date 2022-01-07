@@ -66,61 +66,61 @@ uintptr_t get_aligned_address(uintptr_t buffer) {
 }
 
 int main() {
-    auto true_buffer_start = (uintptr_t) malloc(1024*1024);
-    auto address = get_aligned_address(true_buffer_start);
-    if (get_array_size() - (true_buffer_start - address) < l1::size()) {
-        std::cout << "Failed to properly map address" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    prime_probe pp;
-    auto cache_mapping = pp.generate_mapped_addresses(address, true_buffer_start, get_array_size());
-
-//    register size_t RCX asm("rcx") = 0;
-//    register size_t RBX asm("rbx") = 0;
-//    register size_t ASSOC asm("r8") = l1::assoc();
-//    register size_t LINE_SIZE asm("r9") = l1::line_size();
-//    register size_t SET_COUNT asm("r10") = l1::set_count();
-    size_t RCX = 0;
-    size_t RBX = 0;
-    size_t ASSOC = l1::assoc();
-    size_t SET_COUNT = l1::set_count();
-    size_t ITER = 0;
-
-    auto baseline = l1::speed();
-
-    const size_t SAMPLES = 10000;
-    auto timing =
-            std::array<std::array<std::array<uint32_t, 8>, 64>, SAMPLES>();
-
-  memsett (address);
-
-  for (ITER = 0; ITER < SAMPLES; ITER++)
-	{
-	  for (RCX = 0; RCX < SET_COUNT; RCX++)
-		{
-		  for (RBX = 0; RBX < ASSOC; RBX++)
-			{
-			  utils::prefetch_range (cache_mapping[RCX][RBX], 1);
-			  //measure the time it takes to accsess the set
-			  *(uintptr_t *)cache_mapping[RCX][RBX] = -1;
-			  timing[ITER][RCX][RBX] = intrinsics::memaccesstime (cache_mapping[RCX][RBX]);
-			}
-		}
-	}
-
-        for (RCX = 0; RCX < SET_COUNT; RCX++) {
-            for (RBX = 0; RBX < ASSOC; RBX++) {
-                uint64_t avg = 0;
-                for(ITER = 0; ITER < SAMPLES; ITER++){
-                    avg+=timing[ITER][RCX][RBX];
-                }
-                avg = avg/SAMPLES;
-                std::cout << avg << " ";
-            }
-            std::cout << std::endl;
-        }
-//loop through all cache sets, clear and measure time to read the addresses
-
+//    auto true_buffer_start = (uintptr_t) malloc(1024*1024);
+//    auto address = get_aligned_address(true_buffer_start);
+//    if (get_array_size() - (true_buffer_start - address) < l1::size()) {
+//        std::cout << "Failed to properly map address" << std::endl;
+//        return EXIT_FAILURE;
+//    }
+//
+//    prime_probe pp;
+//    auto cache_mapping = pp.generate_mapped_addresses(address, true_buffer_start, get_array_size());
+//
+////    register size_t RCX asm("rcx") = 0;
+////    register size_t RBX asm("rbx") = 0;
+////    register size_t ASSOC asm("r8") = l1::assoc();
+////    register size_t LINE_SIZE asm("r9") = l1::line_size();
+////    register size_t SET_COUNT asm("r10") = l1::set_count();
+//    size_t RCX = 0;
+//    size_t RBX = 0;
+//    size_t ASSOC = l1::assoc();
+//    size_t SET_COUNT = l1::set_count();
+//    size_t ITER = 0;
+//
+//    auto baseline = l1::speed();
+//
+//    const size_t SAMPLES = 10000;
+//    auto timing =
+//            std::array<std::array<std::array<uint32_t, 8>, 64>, SAMPLES>();
+//
+//  memsett (address);
+//
+//  for (ITER = 0; ITER < SAMPLES; ITER++)
+//	{
+//	  for (RCX = 0; RCX < SET_COUNT; RCX++)
+//		{
+//		  for (RBX = 0; RBX < ASSOC; RBX++)
+//			{
+//			  utils::prefetch_range (cache_mapping[RCX][RBX], 1);
+//			  //measure the time it takes to accsess the set
+//			  *(uintptr_t *)cache_mapping[RCX][RBX] = -1;
+//			  timing[ITER][RCX][RBX] = intrinsics::memaccesstime (cache_mapping[RCX][RBX]);
+//			}
+//		}
+//	}
+//
+//        for (RCX = 0; RCX < SET_COUNT; RCX++) {
+//            for (RBX = 0; RBX < ASSOC; RBX++) {
+//                uint64_t avg = 0;
+//                for(ITER = 0; ITER < SAMPLES; ITER++){
+//                    avg+=timing[ITER][RCX][RBX];
+//                }
+//                avg = avg/SAMPLES;
+//                std::cout << avg << " ";
+//            }
+//            std::cout << std::endl;
+//        }
+////loop through all cache sets, clear and measure time to read the addresses
+//
   return 0;
 }

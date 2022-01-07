@@ -30,23 +30,19 @@ namespace cache_money {
     public:
 
         prime_probe();
+        ~prime_probe();
 
-        static const uint64_t SAMPLES = 50;
-
-
+        static const uint64_t SAMPLES = 100;
 //        std::array<std::array<std::array<std::pair<uint32_t, uint64_t>, 8>, 64>, SAMPLES> *probe();
-
 //        std::pair<std::vector<uint32_t>, std::vector<uint64_t>> probe(uint64_t epoch = 0);
         std::vector<double> prime();
-
-        std::vector<bool> probe(const std::vector<double> &minTimes, uint64_t slotInitial = 0, uint64_t slot = 0,
-                                uint64_t epoch = 0);
+        std::vector<bool> probe(const std::vector<double> &minTimes, uint64_t slotInitial = 0, uint64_t slot = 0, uint64_t epoch = 0);
 
     private:
         void generate_mapped_addresses();
 
         std::vector<std::vector<uintptr_t>> m_mapped;
-        void *m_buffer;
+        uintptr_t m_buffer;
         size_t m_buffer_size;
     };
 }

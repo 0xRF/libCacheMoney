@@ -57,7 +57,7 @@ inline void clflush(uintptr_t address) {
 }
 
 inline void prefetch0(uintptr_t address){
-    asm("cpuid");
+    __builtin_prefetch((void*)address);
 //    asm("PREFETCH0 %0" ::"r"(address));
 //TODO implement
 }
