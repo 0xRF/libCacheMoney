@@ -20,6 +20,8 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <l1.hpp>
 #include <bitset>
+#include <exception>
+#include <stdexcept>
 
 namespace utils {
     uint64_t get_memory_baseline_speed(uint64_t iterations) {
@@ -58,7 +60,7 @@ namespace utils {
 		if (utils::is_page_start (address) && cache::l1::is_start_of_cache_line (address) && get_address_set (address) == 0)
 		  return address;
 
-	  return 0;
+      throw std::runtime_error("Could not find an aligned address");
 	}
 
 //    size_t get_cache_set_outdated(uintptr_t address) {

@@ -45,7 +45,6 @@ int main(void) {
 //    matplot::ylim({0, 64});
 //    matplot::xlim({0, static_cast<double>(fin - epoch)});
 
-
 //    matplot::show();
 
     delete pp;

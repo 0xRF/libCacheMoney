@@ -19,20 +19,6 @@ using namespace cache_money;
 using namespace cache;
 using namespace std;
 
-//array<array<uintptr_t, 8>, 64>
-//prime_probe::generate_mapped_addresses (uintptr_t address, uintptr_t true_start, size_t array_size)
-//{
-//  auto cache_sets = array<array<uintptr_t, 8>, 64> ();
-//
-//  for (size_t set = 0; set < l1::set_count (); set++)
-//	{
-//	  uintptr_t ptr = address * l1::line_size ();
-//	  for (size_t block = 0; block < l1::assoc (); block++)
-//		{
-//		  cout << utils::get_address_set (ptr + block * l1::) << endl;
-//		}
-//	}
-//}
 prime_probe::prime_probe() : m_mapped(vector<vector<uintptr_t>>(l1::set_count(), vector<uintptr_t>(l1::assoc()))),
                              m_buffer_size(1024 * 1024) {
 //    m_buffer_size(l1::size() * 2) {
@@ -71,53 +57,6 @@ void prime_probe::generate_mapped_addresses() {
     }) != 0)
         throw std::runtime_error("Could find all the required addresses");
 }
-
-//array<array<array<pair<uint32_t, uint64_t>, 8>, 64>, prime_probe::SAMPLES>* prime_probe::probe() {
-//
-//    size_t array_size = 1024 * 1024;
-//    auto buffer = (uintptr_t) malloc(array_size);
-//    auto address = utils::get_aligned_address(buffer, array_size);
-//    auto mapped = generate_mapped_addresses(address, buffer, array_size);
-//    auto times = new array<array<array<pair<uint32_t, uint64_t>, 8>, 64>, SAMPLES>();
-//    uint64_t epoch = intrinsics::rdtscp64();
-//
-//    for (int i = 0; i < SAMPLES; i++) {
-//        for (uint64_t set = 0; set < l1::set_count(); set++)
-//            for (uint64_t block = 0; block < l1::assoc(); block++)
-//                (*times)[i][set][block] = {intrinsics::memaccesstime(mapped[set][block]), intrinsics::rdtscp64() - epoch};
-//
-//        utils::cycle_wait(10);
-//    }
-//    return times;
-//}
-//pair<vector<uint32_t>, vector<uint64_t>> prime_probe::probe(uint64_t epoch) {
-//    if (epoch == 0)
-//        epoch = intrinsics::rdtscp64();
-//
-//    size_t array_size = 1024 * 1024;
-//    auto buffer = (uintptr_t) malloc(array_size);
-//    auto address = utils::get_aligned_address(buffer, array_size);
-//    auto mapped = generate_mapped_addresses(address, buffer, array_size);
-//
-//    auto memtimes = std::vector<uint32_t>(64 * 8 * SAMPLES);
-//    auto cycles = std::vector<uint64_t>(64 * 8 * SAMPLES);
-////            new array<uint32_t, 64 * 8 * prime_probe::SAMPLES>();
-////    auto cycles = new array<uint64_t, 64 * 8 * prime_probe::SAMPLES>();
-//
-//
-//    for (int i = 0; i < SAMPLES; i++) {
-//        for (uint64_t set = 0; set < l1::set_count(); set++)
-//            for (uint64_t block = 0; block < l1::assoc(); block++) {
-//                (memtimes)[i + block * l1::assoc() * l1::set_count() +
-//                           set * l1::set_count()] = intrinsics::memaccesstime(mapped[set][block]);
-//                (cycles)[i + block * l1::assoc() * l1::set_count() + set * l1::set_count()] =
-//                        intrinsics::rdtscp64() - epoch;
-//            }
-//
-//        utils::cycle_wait(10);
-//    }
-//    return pair<vector<uint32_t>, vector<uint64_t>>(memtimes, cycles);
-//}
 
 std::vector<bool>
 prime_probe::probe(const std::vector<double> &minTimes, uint64_t slotInitial, uint64_t slot,

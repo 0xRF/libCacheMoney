@@ -14,7 +14,7 @@ namespace victims {
         void trigger(char array[8]);
     private:
         uint8_t *m_sBox = nullptr;
-//        CacheLine *m_lines = nullptr;
+//        cache_line *m_lines = nullptr;
         std::array<int, 8> m_secretKey = {0, 1, 2, 3, 4, 5, 6, 7};
     };
 }
