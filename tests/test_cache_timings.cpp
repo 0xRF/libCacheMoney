@@ -87,7 +87,7 @@ int main() {
 //    size_t SET_COUNT = l1::set_count();
 //    size_t ITER = 0;
 //
-//    auto baseline = l1::speed();
+//    auto m_baseline = l1::speed();
 //
 //    const size_t SAMPLES = 10000;
 //    auto timing =

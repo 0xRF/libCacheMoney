@@ -4,3 +4,4 @@ bin/
 cmake-*/
 compile_commands.json
 Testing/
+matlab/
