@@ -28,22 +28,22 @@ namespace cache_money {
         typedef cache_line_t<LINE_SIZE> cache_line;
 
         meta_cache() {
-            m_buffer_size = sizeof(cache_line) * get_set_count() * get_assoc() * 30;
+            m_buffer_size = sizeof(cache_line) * set_count() * assoc() * 30;
             m_buffer = (cache_line *) malloc(m_buffer_size);
             m_baseline = 0;
             generate_mapped_addresses();
             generate_baseline_speed();
         }
 
-        static constexpr size_t get_size() { return SIZE; }
-        static constexpr size_t get_assoc() { return ASSOC; }
-        static constexpr size_t get_line_size() { return LINE_SIZE; }
-        static constexpr size_t get_set_count() { return get_size() / get_set_size(); }
-        static constexpr size_t get_set_size() { return get_assoc() * get_line_size(); }
+        static constexpr size_t size() { return SIZE; }
+        static constexpr size_t assoc() { return ASSOC; }
+        static constexpr size_t line_size() { return LINE_SIZE; }
+        static constexpr size_t set_count() { return size() / set_size(); }
+        static constexpr size_t set_size() { return assoc() * line_size(); }
         inline uint64_t measure(uint32_t set) {
             uint64_t max = 0;
-            for (int block = 0; block < get_assoc(); block++) {
-                uint64_t time = intrinsics::memaccesstime(m_mapped[set + block * get_set_count()]);
+            for (int block = 0; block < assoc(); block++) {
+                uint64_t time = intrinsics::memaccesstime(m_mapped[set + block * set_count()]);
                 if (time > max)
                     max = time;
             }
@@ -57,7 +57,7 @@ namespace cache_money {
 
             while (time < cycleSpan) {
                 auto iteration = std::vector<uint64_t>();
-                for (size_t set = 0; set < get_set_count(); set++) {
+                for (size_t set = 0; set < set_count(); set++) {
                     iteration[set] = measure(set);
                 }
                 time = intrinsics::rdtscp64() - epoch;
@@ -66,37 +66,33 @@ namespace cache_money {
             return mapped;
         }
 
-        inline std::uint32_t misses(uint32_t set, uint64_t baseline = 0) {
+        [[nodiscard]] inline std::uint32_t misses(uint32_t set, uint64_t baseline = 0, uint64_t extraSlot=40) const {
             if (baseline == 0)
                 baseline = m_baseline;
 
             uint64_t count = 0;
-            for (int block = 0; block < get_assoc(); block++) {
-                uint64_t time = intrinsics::memaccesstime(m_mapped[set + m_sbox[block] * get_set_count()]);
-                if (time > baseline + 40)
+            for (int block = 0; block < assoc(); block++) {
+                uint64_t time = intrinsics::memaccesstime(m_mapped[set + m_sbox[block] * set_count()]);
+                if (time > baseline+extraSlot)
                     count++;
-                else
-                {
-
-                }
             }
             return count;
         }
         void flush_cache() {
-            for (int set = 0; set < get_set_count(); set++)
+            for (int set = 0; set < set_count(); set++)
                 flush_set(set);
         }
         void fill_cache() {
-            for (int set = 0; set < get_set_count(); set++)
+            for (int set = 0; set < set_count(); set++)
                 fill_set(set);
         }
         inline void flush_set(uint32_t set) {
-            for (int block = 0; block < get_assoc(); block++)
-                intrinsics::clflush(m_mapped[set + m_sbox[block] * get_set_count()]);
+            for (int block = 0; block < assoc(); block++)
+                intrinsics::clflush(m_mapped[set + m_sbox[block] * set_count()]);
         }
         inline void fill_set(uint32_t set) {
-            for (int block = 0; block < get_assoc(); block++)
-                *(uintptr_t *) m_mapped[set + m_sbox[block] * get_set_count()] = 0;
+            for (int block = 0; block < assoc(); block++)
+                *(uintptr_t *) m_mapped[set + m_sbox[block] * set_count()] = 0;
         }
 
     private:
@@ -104,12 +100,12 @@ namespace cache_money {
         void generate_mapped_addresses() {
             auto address = utils::get_aligned_address((uintptr_t) m_buffer, m_buffer_size);
 
-            m_mapped = std::vector<uintptr_t>(get_set_count() * get_assoc());
+            m_mapped = std::vector<uintptr_t>(set_count() * assoc());
 
-            for (size_t cache_set = 0; cache_set < get_set_count(); cache_set++) {
+            for (size_t cache_set = 0; cache_set < set_count(); cache_set++) {
                 uintptr_t ptr = address;
                 auto tags = std::vector<uint64_t>();
-                for (size_t block = 0; block < get_assoc(); block++) {
+                for (size_t block = 0; block < assoc(); block++) {
                     auto tag = utils::get_address_tag(ptr);
                     while (utils::get_address_set(ptr) != cache_set ||
                            (find(tags.begin(), tags.end(), tag) != tags.end())) {
@@ -118,7 +114,7 @@ namespace cache_money {
                         if (ptr > (uintptr_t) m_buffer + m_buffer_size)
                             throw std::runtime_error("Out of bounds");
                     }
-                    m_mapped[cache_set + block * get_set_count()] = ptr;
+                    m_mapped[cache_set + block * set_count()] = ptr;
                     tags.push_back(tag);
                     ptr += sizeof(uintptr_t);
                 }
@@ -129,9 +125,9 @@ namespace cache_money {
         void generate_baseline_speed(uint64_t iterations = 10000) {
             m_baseline = std::numeric_limits<uint64_t>::max();
             for (size_t i = 0; i < iterations; i++) {
-                for (size_t cache_set = 0; cache_set < get_set_count(); cache_set++)
-                    for (int block = 0; block < get_assoc(); block++) {
-                        uint64_t time = intrinsics::memaccesstime(m_mapped[cache_set + block * get_set_count()]);
+                for (size_t cache_set = 0; cache_set < set_count(); cache_set++)
+                    for (int block = 0; block < assoc(); block++) {
+                        uint64_t time = intrinsics::memaccesstime(m_mapped[cache_set + block * set_count()]);
                         if (time < m_baseline)
                             m_baseline = time;
                     }
@@ -154,13 +150,13 @@ namespace cache_money {
 /// \param iterations
 /// \return
 //        std::vector<std::vector<double>> get_baseline_speed(uint64_t iterations = 10000) {
-//            auto cache = std::vector<std::vector<double>>(get_set_count(),
-//                                                          std::vector<double>(get_assoc(),
+//            auto cache = std::vector<std::vector<double>>(set_count(),
+//                                                          std::vector<double>(assoc(),
 //                                                                              std::numeric_limits<double>::max()));
 //            for (size_t i = 0; i < iterations; i++) {
-//                for (size_t cache_set = 0; cache_set < get_set_count(); cache_set++)
-//                    for (int block = 0; block < get_assoc(); block++) {
-//                        uint64_t time = intrinsics::memaccesstime(m_mapped[cache_set + block * get_set_count()]);
+//                for (size_t cache_set = 0; cache_set < set_count(); cache_set++)
+//                    for (int block = 0; block < assoc(); block++) {
+//                        uint64_t time = intrinsics::memaccesstime(m_mapped[cache_set + block * set_count()]);
 //                        if ((double) time < cache[cache_set][block])
 //                            cache[cache_set][block] = (double) time;
 //                    }

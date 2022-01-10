@@ -19,112 +19,56 @@ using namespace cache_money;
 using namespace cache;
 using namespace std;
 
-prime_probe::prime_probe() : m_mapped(vector<vector<uintptr_t>>(l1::set_count(), vector<uintptr_t>(l1::assoc()))),
-                             m_buffer_size(1024 * 1024) {
-//    m_buffer_size(l1::size() * 2) {
-    m_buffer = (uintptr_t) malloc(m_buffer_size);
-    if (malloc_usable_size((void *) m_buffer) < m_buffer_size)
-        throw std::runtime_error("Could not allocate the required bytes");
-    memset((void *) m_buffer, 0xCC, m_buffer_size);
-    generate_mapped_addresses();
-    std::cout << "Capcity " << m_mapped.capacity() << std::endl;
-}
+prime_probe::prime_probe() : m_cache() {}
 
-//TODO this is beyond a horrible way of accomplishing this, but it does not matter as it only need to be done once
-void prime_probe::generate_mapped_addresses() {
-    auto address = utils::get_aligned_address((uintptr_t) m_buffer, m_buffer_size);
+std::vector<uint32_t>
+prime_probe::probe(const std::function<void> &trigger, uint64_t slotInitial, uint64_t slot, uint64_t epoch) {
 
-    for (size_t cache_set = 0; cache_set < cache::l1::set_count(); cache_set++) {
-        uintptr_t ptr = address;
-        auto tags = vector<uint64_t>();
-        for (size_t block = 0; block < cache::l1::assoc(); block++) {
-            auto tag = utils::get_address_tag(ptr);
-            while (utils::get_address_set(ptr) != cache_set ||
-                   (find(tags.begin(), tags.end(), tag) != tags.end())) {
-                ptr += sizeof(uintptr_t);
-                tag = utils::get_address_tag(ptr);
-
-                if (ptr > (uintptr_t) m_buffer + m_buffer_size)
-                    throw std::runtime_error("Out of bounds");
-            }
-            m_mapped[cache_set][block] = ptr;
-            tags.push_back(tag);
-            ptr += sizeof(uintptr_t);
-        }
-    }
-    if (std::count_if(m_mapped.begin(), m_mapped.end(), [](const auto &val) {
-        return std::count(val.begin(), val.end(), 0) != 0;
-    }) != 0)
-        throw std::runtime_error("Could find all the required addresses");
-}
-
-std::vector<bool>
-prime_probe::probe(const std::vector<double> &minTimes, uint64_t slotInitial, uint64_t slot,
-                   [[maybe_unused]] uint64_t epoch) {
-
+    auto victimSets = std::vector<uint32_t>();
     utils::cycle_wait(slotInitial);
-    auto timings = vector<vector<uint32_t>>(l1::set_count() * l1::assoc(),
-                                            std::vector<uint32_t>(SAMPLES));
-    for (int i = 0; i < SAMPLES; i++) {
-        for (uint64_t set = 0; set < l1::set_count(); set++)
-            for (uint64_t block = 0; block < l1::assoc(); block++) {
-                timings[set + l1::set_count() * block][i] = intrinsics::memaccesstime(m_mapped[set][block]);
-            }
 
-        utils::cycle_wait(slot);
-    }
-
-
-    auto averages = std::vector<double>();
-    std::for_each(timings.begin(), timings.end(), [&](auto line) {
-//        averages.push_back(std::accumulate(line.begin(), line.end(), 0.0) / line.size());
-        averages.push_back(*std::max_element(line.begin(), line.end()));
-    });
-
-    auto bools = vector<bool>(l1::set_count() * l1::assoc());
-    for (uint64_t set = 0; set < l1::set_count(); set++)
-        for (uint64_t block = 0; block < l1::assoc(); block++)
-            bools[set * l1::set_count() * block] =
-                    averages[set + l1::set_count() * block] > minTimes[set + l1::set_count() * block];
-
-    return bools;
+    return victimSets;
 }
 
-vector<double> prime_probe::prime() {
+vector<uint64_t> prime_probe::prime(uint64_t samples) {
 
-    //Prefetch every address in the cache
-//    utils::prefetch_range(*m_mapped.begin()->begin(), *m_mapped.end()->end());
-    for (const auto &set: m_mapped)
-        for (const auto &line: set)
-            intrinsics::prefetch0(line);
-//            *(uintptr_t*)line = 0x1337;
+    auto timings = std::vector<uint64_t>(cache::set_count());
 
-    auto timings = vector<vector<uint32_t>>(l1::set_count() * l1::assoc(),
-                                            vector<uint32_t>(SAMPLES));
+    m_cache.fill_cache();
 
-    for (int i = 0; i < SAMPLES; i++) {
-        for (uint64_t set = 0; set < l1::set_count(); set++)
-            for (uint64_t block = 0; block < l1::assoc(); block++) {
-                timings[set + block * l1::set_count()][i] = intrinsics::memaccesstime(m_mapped[set][block]);
-            }
+    for (size_t set = 0; set < cache::set_count(); set++)
+        timings[set] = m_cache.measure(set);
 
-        utils::cycle_wait(10);
-    }
-
-    auto averages = std::vector<double>();
-    std::for_each(timings.begin(), timings.end(), [&](auto line) {
-        averages.push_back(*std::min_element(line.begin(), line.end()));
-//                std::accumulate(line.begin(), line.end(), 0.0) / line.size());
-    });
-
-    return averages;
-//    return pair<vector<uint32_t>, vector<uint64_t>>(memtimes, cycles);
+    return std::move(timings);
 }
 
 prime_probe::~prime_probe() {
-    for (auto buff: m_mapped)
-        buff.clear();
-    m_mapped.clear();
-
-    free((void *) m_buffer);
 }
+
+//This can be improved upon by taking a sample of the averages
+uint64_t prime_probe::find_initial_slot(int targetCacheSets, const function<void(void)> &trigger, uint32_t iterations,
+                                        uint32_t stepSize) {
+
+    uint64_t slot = 0;
+    uint64_t bestDistance = 0;
+    uint64_t bestSlot = 0;
+
+    for (int i = 0; i < iterations; i++) {
+        int currMisses = 0;
+        m_cache.fill_cache();
+        utils::cycle_wait(slot);
+        trigger();
+        for (size_t set = 0; set < cache::set_count(); set++)
+            currMisses += m_cache.misses(set);
+
+        uint64_t distance = std::abs(targetCacheSets - currMisses);
+
+        if (bestDistance > distance) {
+            bestDistance = distance;
+            bestSlot = slot;
+        }
+        slot += stepSize;
+    }
+    return bestSlot;
+}
+

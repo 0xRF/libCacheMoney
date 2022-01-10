@@ -23,6 +23,8 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <array>
 #include <vector>
+#include <functional>
+#include "meta_cache.hpp"
 
 
 namespace cache_money {
@@ -33,17 +35,28 @@ namespace cache_money {
         ~prime_probe();
 
         static const uint64_t SAMPLES = 100;
-//        std::array<std::array<std::array<std::pair<uint32_t, uint64_t>, 8>, 64>, SAMPLES> *probe();
-//        std::pair<std::vector<uint32_t>, std::vector<uint64_t>> probe(uint64_t epoch = 0);
-        std::vector<double> prime();
-        std::vector<bool> probe(const std::vector<double> &minTimes, uint64_t slotInitial = 0, uint64_t slot = 0, uint64_t epoch = 0);
+
+        /// Fills the entire cache with malicous data  and Returns the smallest speed of each cache set over N iterations
+        /// \return
+        std::vector<uint64_t> prime(uint64_t samples = 1000);
+
+        /// Returns the amount of which each cache set has a misses
+        /// \param trigger
+        /// \param slotInitial
+        /// \param slot
+        /// \param epoch
+        /// \return
+        std::vector<uint32_t> probe(const std::function<void>& trigger, uint64_t slotInitial = 0, uint64_t slot = 0, uint64_t epoch = 0);
+
+        /// Figure out the initial slot time through trial and error
+        /// \param trigger
+        /// \return
+        [[nodiscard]] uint64_t find_initial_slot(int targetCacheSets, const std::function<void(void)>& trigger, uint32_t iterations=10000, uint32_t stepSize = 10);
+
 
     private:
-        void generate_mapped_addresses();
-
-        std::vector<std::vector<uintptr_t>> m_mapped;
-        uintptr_t m_buffer;
-        size_t m_buffer_size;
+        typedef meta_cache<64, 8, 3*1024> cache;
+        cache m_cache;
     };
 }
 

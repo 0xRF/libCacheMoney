@@ -11,7 +11,7 @@ function(create_victim VICTIM_NAME)
     message(STATUS "Creating Victim ${VICTIM_NAME}")
 endfunction()
 
-file(GLOB VICTIM_FILES "victim_*.cpp")
+file(GLOB VICTIM_FILES "*.cpp")
 foreach(FILE_PATH ${VICTIM_FILES})
     cmake_path(GET FILE_PATH STEM LAST_ONLY VICTIM)
     create_victim(${VICTIM})
