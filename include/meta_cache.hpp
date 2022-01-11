@@ -13,10 +13,10 @@
 namespace cache_money {
 
     template<size_t SET_COUNT>
-    struct cache_line_t {
+    struct alignas(64) cache_line_t {
     private:
         uint8_t bytes[SET_COUNT];
-    } __attribute__((aligned));
+    };
 
     //A class to represent a cache structure and provide useful properities
     // for mapping addresses
@@ -144,22 +144,3 @@ namespace cache_money {
 }
 
 #endif //LIBCACHEMONEY_META_CACHE_HPP
-
-
-/// Get the l1 cache m_baseline speed per line and store it in a vector
-/// \param iterations
-/// \return
-//        std::vector<std::vector<double>> get_baseline_speed(uint64_t iterations = 10000) {
-//            auto cache = std::vector<std::vector<double>>(set_count(),
-//                                                          std::vector<double>(assoc(),
-//                                                                              std::numeric_limits<double>::max()));
-//            for (size_t i = 0; i < iterations; i++) {
-//                for (size_t cache_set = 0; cache_set < set_count(); cache_set++)
-//                    for (int block = 0; block < assoc(); block++) {
-//                        uint64_t time = intrinsics::memaccesstime(m_mapped[cache_set + block * set_count()]);
-//                        if ((double) time < cache[cache_set][block])
-//                            cache[cache_set][block] = (double) time;
-//                    }
-//            }
-//            return cache;
-//        }

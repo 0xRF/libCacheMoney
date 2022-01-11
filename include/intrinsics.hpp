@@ -30,18 +30,22 @@ inline uint64_t rdtsc() {
   return high | (low << 32);
 }
 
+inline void lfence() {
+  asm volatile("lfence");
+}
+
 inline uint32_t memaccesstime(uintptr_t address) {
   uint32_t rv;
   asm volatile("mfence\n"
-               "lfence\n"
-               "rdtscp\n"
-               "mov %%eax, %%esi\n"
-               "mov (%1), %%eax\n"
-               "rdtscp\n"
-               "sub %%esi, %%eax\n"
-               : "=&a"(rv)
-               : "r"(address)
-               : "ecx", "edx", "esi");
+			   "lfence\n"
+			   "rdtscp\n"
+			   "mov %%eax, %%esi\n"
+			   "mov (%1), %%eax\n"
+			   "rdtscp\n"
+			   "sub %%esi, %%eax\n"
+  : "=&a"(rv)
+  : "r"(address)
+  : "ecx", "edx", "esi");
   return rv;
 }
 
@@ -53,13 +57,16 @@ inline uint64_t rdtscp64() {
 
 inline void clflush(uintptr_t address) {
   asm("cpuid");
-  asm("clflush (%0)" ::"r"(address));
+  asm("clflush (%0)"::"r"(address));
 }
 
-inline void prefetch0(uintptr_t address){
-    __builtin_prefetch((void*)address);
-//    asm("PREFETCH0 %0" ::"r"(address));
+inline void prefetch0(uintptr_t address) {
+//    __builtin_prefetch((void*)address);
 //TODO implement
+}
+
+inline void maccess(uintptr_t address) {
+  __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");
 }
 
 } // namespace intrinsics

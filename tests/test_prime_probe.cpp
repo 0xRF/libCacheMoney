@@ -27,8 +27,8 @@ int main(void) {
     char arr[8] = "ABCDEFG";
 
     //4 in this weak alg, probs not correct but still
-    uint64_t slot = pp.find_initial_slot(4, [pAlg = &alg, arr] { pAlg->trigger((char*)arr); });
-    pp.probe([pAlg = &alg, arr] { pAlg->trigger((char*)arr); }, slot);
+//    uint64_t slot = pp.find_initial_slot(4, [pAlg = &alg, arr] { pAlg->trigger((char*)arr); });
+//    pp.probe([pAlg = &alg, arr] { pAlg->trigger((char*)arr); }, slot);
 
     return 0;
 }
