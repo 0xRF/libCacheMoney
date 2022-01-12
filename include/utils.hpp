@@ -23,26 +23,32 @@ along with libCacheMoney.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 
 namespace utils {
-    [[nodiscard]] uintptr_t get_page_start(uintptr_t address);
+[[nodiscard]] uintptr_t get_page_start(uintptr_t address);
 
-    [[nodiscard]] bool is_page_start(uintptr_t address);
+[[nodiscard]] bool is_page_start(uintptr_t address);
 
-    [[nodiscard]] bool has_privilege();
+[[nodiscard]] bool has_privilege();
 
-    [[nodiscard]] uintptr_t map_shared_object(const char *filename);
+[[nodiscard]] uintptr_t map_shared_object(const char *filename);
 
-    [[nodiscard]] uint64_t get_memory_baseline_speed(uint64_t iterations = 10000);
+[[nodiscard]] uint64_t get_memory_baseline_speed(uint64_t iterations = 10000);
 
-    void prefetch(uintptr_t start, size_t size);
-    void prefetch_range(uintptr_t start, uintptr_t end);
+void prefetch(uintptr_t start, size_t size);
+void prefetch_range(uintptr_t start, uintptr_t end);
 
-    void cycle_wait(uint64_t delay);
+void cycle_wait(uint64_t delay);
 
-    uint64_t get_address_set(uintptr_t address);
+[[nodiscard]] uint64_t get_address_set(uintptr_t address);
 
-    uint64_t get_address_tag(uintptr_t address);
+[[nodiscard]] uint64_t get_address_tag(uintptr_t address);
 
-	uintptr_t get_aligned_address (uintptr_t buffer, size_t size);
+[[nodiscard]] uintptr_t get_aligned_address(uintptr_t buffer, size_t size);
+
+[[nodiscard]] uintptr_t get_physical_address(uintptr_t virtualAddress);
+
+uint32_t get_page_index(uintptr_t virtualAddress);
+
+
 
 } // namespace utils
 

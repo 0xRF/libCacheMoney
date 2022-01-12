@@ -5,6 +5,8 @@ project(libCacheMoney)
 set(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 
+message("Compiler: ${CMAKE_CXX_COMPILER_ID} - ${CMAKE_CXX_COMPILER_VERSION}")
+
 if (UNIX)
     set(PLATFORM_DIR linux)
 else ()
@@ -20,6 +22,7 @@ add_library(libCacheMoney SHARED
         src/common/prime_probe.cpp
         src/common/cache.cpp
         src/common/l1.cpp
+        src/common/l3.cpp
         src/common/eviction_set_builder.cpp
         )
 

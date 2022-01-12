@@ -142,7 +142,11 @@ int main() {
 
   eviction_set_builder builder;
 
+  std::cout << sizeof(unsigned long long) << std::endl;
+  std::cout << sizeof(uintptr_t) << std::endl;
+
   auto S = find_eviction_set_l1(23);
+
   //
   bool isEviction = builder.test(S, 0, cache::l1::speed() + 10);
   std::cout << isEviction << std::endl;
