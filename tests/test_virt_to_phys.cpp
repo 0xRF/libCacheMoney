@@ -12,6 +12,8 @@
 #include <l1.hpp>
 #include <evsets/eviction_sets.hpp>
 #include <cstring>
+#include <algorithm>
+#include <numeric>
 
 using namespace utils;
 using namespace eviction_sets;
@@ -106,50 +108,53 @@ using namespace cache;
 
 bool test_l3_evset(const std::array<element *, l3::assoc()> &evset, element *target) {
 
-    //Wait until evicted from te cache
-    int cnt = 0;
-    uint64_t time = 0;
-    std::vector<uint64_t> times{};
-    while ((time = intrinsics::memaccesstime::fenced(target)) < 50) {
-        accsess_prime_pattern(evset);
-        times.push_back(time);
-    }
-    for (auto time: times)
-        std::cout << time << " ";
-    std::cout << std::endl;
+  //Wait until evicted from te cache
+  int cnt = 0;
+  uint64_t time = 0;
+  std::vector<uint64_t> times{};
+  for (int i = 0; i < 500; i++) {
+	accsess_prime_pattern(evset);
+	accsess_prime_pattern(evset);
+	accsess_prime_pattern(evset);
+	accsess_prime_pattern(evset);
+	times.push_back(
+		intrinsics::memaccesstime::fenced(target));
+  }
 
-    return true;
+  std::cout << "Average: " << (double)std::accumulate(times.begin(), times.end(), 0.0f)/times.size() << std::endl;
+
+  return true;
 
 }
 
 int main() {
-    using namespace std::chrono;
-    typedef high_resolution_clock::time_point time_point;
+  using namespace std::chrono;
+  typedef high_resolution_clock::time_point time_point;
 
-    //The L3 cache size is 8MB so double that
-    const static size_t SIZE = 1024 * 1024 * 8 * 4;
-    element *buffer = (element *) malloc(SIZE);
-    std::cout << "malloc'd: " << malloc_usable_size(buffer) << '/' << SIZE << std::endl;
-    memset(buffer, 0xCC, SIZE);
+  //The L3 cache size is 8MB so double that
+  const static size_t SIZE = 1024*1024*8*4;
+  element *buffer = (element *)malloc(SIZE);
+  std::cout << "malloc'd: " << malloc_usable_size(buffer) << '/' << SIZE << std::endl;
+  memset(buffer, 0xCC, SIZE);
 
-    element *target = buffer;
-    buffer++;
+  element *target = buffer;
+  buffer++;
 
-    time_point t1 = std::chrono::high_resolution_clock::now();
+  time_point t1 = std::chrono::high_resolution_clock::now();
 
-    auto S = eviction_sets::construct_eviction_set(target, buffer, SIZE);
+  auto S = eviction_sets::construct_eviction_set(target, buffer, SIZE);
 
-    time_point t2 = high_resolution_clock::now();
-    milliseconds ms = duration_cast<milliseconds>(t2 - t1);
-    std::cout << ms.count() << " ms\n";
+  time_point t2 = high_resolution_clock::now();
+  milliseconds ms = duration_cast<milliseconds>(t2 - t1);
+  std::cout << ms.count() << " ms\n";
 
-    test_l3_evset(S, target);
+  test_l3_evset(S, target);
 
 
 //  auto S = eviction_sets::construct_inclusive_brute_force(buffer, (SIZE)/sizeof(element), l1::speed());
 
 //  check((unsigned int)getpid(), (unsigned long long *)S.data(), (unsigned int)S.size());
-    return 0;
+  return 0;
 }
 
 
