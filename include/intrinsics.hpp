@@ -105,7 +105,8 @@ namespace intrinsics {
         inline void nullgaurd(void *address) {
             if (address != nullptr)
                     __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");
-        }
+		  asm volatile("lfence;mfence");
+		}
 
         inline void normal(void *address) {
             __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");

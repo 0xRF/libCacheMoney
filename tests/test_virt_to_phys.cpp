@@ -104,37 +104,15 @@ using namespace cache;
 
 //
 
-bool test_l3_evset(std::array<element *, l3::assoc()> evset, element *matching) {
+bool test_l3_evset(const std::array<element *, l3::assoc()>& evset, element *target) {
 
-  const static size_t REPEATS = 3;
-  const static size_t STRIDES = 4;
-
-  for (int r = 0; r < REPEATS; r++) {
-	for (int i = 0; i < l3::assoc() - 3; i += STRIDES) {
-	  intrinsics::maccess::normal(evset[i]); //0
-	  intrinsics::maccess::normal(evset[i + 1]); //1
-	  intrinsics::maccess::normal(evset[0]); //S
-	  intrinsics::maccess::normal(evset[0]); //S
-	  intrinsics::maccess::normal(evset[i + 2]); //2
-	  intrinsics::maccess::normal(evset[0]); //S
-	  intrinsics::maccess::normal(evset[0]); //S
-	  intrinsics::maccess::normal(evset[i + 3]); //3
-	  intrinsics::maccess::normal(evset[i]); //0
-	  intrinsics::maccess::normal(evset[i + 1]); //1
-	  intrinsics::maccess::normal(evset[i + 2]); //2
-	  intrinsics::maccess::normal(evset[i + 3]); //3
-	}
-	intrinsics::lfence();
-	intrinsics::mfence();
-  }
-
-
+  accsess_prime_pattern(evset, target);
   //Wait until evicted from te cache
   int cnt = 0;
   uint64_t time = 0;
   std::vector<uint64_t> times{};
-  while ((time = intrinsics::memaccesstime::fenced(evset[0])) < 60) {
-	intrinsics::maccess::fenced(matching);
+  while ((time = intrinsics::memaccesstime::fenced(evset[0])) < 50) {
+	intrinsics::maccess::fenced(target);
 	times.push_back(time);
   }
   for (auto time : times)
@@ -146,26 +124,23 @@ bool test_l3_evset(std::array<element *, l3::assoc()> evset, element *matching) 
 }
 
 int main() {
-
-//  std::cout << physical_to_slice(0x6969) << std::endl;
-
   using namespace std::chrono;
+  typedef high_resolution_clock::time_point time_point;
 
   //The L3 cache size is 8MB so double that
   const static size_t SIZE = 1024*1024*8*4;
   element *buffer = (element *)malloc(SIZE);
-  std::cout << "Managed to malloc: " << malloc_usable_size(buffer) << '/' << SIZE << std::endl;
+  std::cout << "malloc'd: " << malloc_usable_size(buffer) << '/' << SIZE << std::endl;
   memset(buffer, 0xCC, SIZE);
 
   element *target= buffer;
   buffer++;
 
-  std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+  time_point t1 = std::chrono::high_resolution_clock::now();
 
-//  for (int i = 0; i < 1000; i++)
   auto S = eviction_sets::construct_eviction_set(target, buffer,SIZE);
 
-  high_resolution_clock::time_point t2 = high_resolution_clock::now();
+  time_point t2 = high_resolution_clock::now();
   milliseconds ms = duration_cast<milliseconds>(t2 - t1);
   std::cout << ms.count() << " ms\n";
 
