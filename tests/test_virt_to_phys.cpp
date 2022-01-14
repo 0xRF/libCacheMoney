@@ -109,19 +109,25 @@ using namespace cache;
 bool test_l3_evset(const std::array<element *, l3::assoc()> &evset, element *target) {
 
   //Wait until evicted from te cache
-  int cnt = 0;
   uint64_t time = 0;
   std::vector<uint64_t> times{};
   for (int i = 0; i < 500; i++) {
+	//Reload target into the cache
+	for(int j = 0; j < 10; j++)
+	intrinsics::memaccesstime::fenced(target);
+
 	accsess_prime_pattern(evset);
 	accsess_prime_pattern(evset);
 	accsess_prime_pattern(evset);
 	accsess_prime_pattern(evset);
-	times.push_back(
-		intrinsics::memaccesstime::fenced(target));
+	times.push_back(intrinsics::memaccesstime::fenced(target));
   }
 
-  std::cout << "Average: " << (double)std::accumulate(times.begin(), times.end(), 0.0f)/times.size() << std::endl;
+  int cnt = 0;
+  for(auto time : times)
+	if(time > 50) // 50 is approx a value which worked on the prime+scope implemenation consitently
+	  cnt++;
+  std::cout << "Possibly evicted: " << cnt << "/500"<< std::endl;
 
   return true;
 
