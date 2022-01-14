@@ -24,90 +24,98 @@
 
 namespace intrinsics {
 
-inline uint64_t rdtsc() {
-  uint64_t high, low;
-  asm("rdtsc" : "=a"(high), "=d"(low) : : "ebx", "ecx");
-  return high | (low << 32);
-}
+    inline uint64_t rdtsc() {
+        uint64_t high, low;
+        asm("rdtsc" : "=a"(high), "=d"(low) : : "ebx", "ecx");
+        return high | (low << 32);
+    }
 
-inline void lfence() {
-  asm volatile("lfence");
-}
+    inline void lfence() {
+        asm volatile("lfence");
+    }
 
-inline void mfence() {
-  asm volatile("mfence");
-}
+    inline void mfence() {
+        asm volatile("mfence");
+    }
 
-namespace memaccesstime {
-inline uint32_t fenced(void *address) {
-  uint32_t rv;
-  asm volatile("mfence\n"
-			   "lfence\n"
-			   "rdtscp\n"
-			   "mov %%eax, %%esi\n"
-			   "mov (%1), %%eax\n"
-			   "rdtscp\n"
-			   "sub %%esi, %%eax\n"
-  : "=&a"(rv)
-  : "r"(address)
-  : "ecx", "edx", "esi");
-  return rv;
-}
+    namespace memaccesstime {
+        inline uint32_t fenced(void *address) {
+            uint32_t rv;
+            asm volatile("mfence\n"
+                         "lfence\n"
+                         "rdtscp\n"
+                         "mov %%eax, %%esi\n"
+                         "mov (%1), %%eax\n"
+                         "rdtscp\n"
+                         "sub %%esi, %%eax\n"
+            : "=&a"(rv)
+            : "r"(address)
+            : "ecx", "edx", "esi");
+            return rv;
+        }
 
-inline uint32_t fenced(uintptr_t address) {
-  return fenced((void *)address);
-}
+        inline uint32_t fenced(uintptr_t address) {
+            return fenced((void *) address);
+        }
 
-inline uint32_t normal(void *address) {
-  uint32_t rv;
-  asm volatile("rdtscp\n"
-			   "mov %%eax, %%esi\n"
-			   "mov (%1), %%eax\n"
-			   "rdtscp\n"
-			   "sub %%esi, %%eax\n"
-  : "=&a"(rv)
-  : "r"(address)
-  : "ecx", "edx", "esi");
-  return rv;
-}
+        inline uint32_t normal(void *address) {
+            uint32_t rv;
+            asm volatile("rdtscp\n"
+                         "mov %%eax, %%esi\n"
+                         "mov (%1), %%eax\n"
+                         "rdtscp\n"
+                         "sub %%esi, %%eax\n"
+            : "=&a"(rv)
+            : "r"(address)
+            : "ecx", "edx", "esi");
+            return rv;
+        }
 
-}
+    }
 
-inline uint64_t rdtscp64() {
-  uint32_t low, high;
-  asm volatile("rdtscp" : "=a"(low), "=d"(high)::"ecx");
-  return (((uint64_t)high) << 32) | low;
-}
+    inline uint64_t rdtscp64() {
+        uint32_t low, high;
+        asm volatile("rdtscp" : "=a"(low), "=d"(high)::"ecx");
+        return (((uint64_t) high) << 32) | low;
+    }
 
-inline void clflush(uintptr_t address) {
-  asm("cpuid");
-  asm("clflush (%0)"::"r"(address));
-}
+    inline void clflush(uintptr_t address) {
+        asm("cpuid");
+        asm("clflush (%0)"::"r"(address));
+    }
 
-inline void prefetch0(uintptr_t address) {
+    inline void prefetch0(uintptr_t address) {
 //    __builtin_prefetch((void*)address);
 //TODO implement
-}
+    }
 
-namespace maccess {
+    namespace maccess {
 
-inline void fenced(void *address) {
-  asm volatile("lfence;mfence");
-  __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");
-  asm volatile("lfence;mfence");
-}
-inline void fenced(uintptr_t address) {
-  fenced((void *)address);
-}
+        inline void fenced(void *address) {
+            asm volatile("lfence;mfence");
+            __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");
+            asm volatile("lfence;mfence");
+        }
 
-inline void normal(void *address) {
-  __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");
-}
-inline void normal(uintptr_t address) {
-  fenced((void *)address);
-}
+        inline void fenced(uintptr_t address) {
+            fenced((void *) address);
+        }
 
-}
+
+        inline void nullgaurd(void *address) {
+            if (address != nullptr)
+                    __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");
+        }
+
+        inline void normal(void *address) {
+            __asm__ volatile ("movq (%0), %%rax\n" : : "c" (address) : "r15");
+        }
+
+        inline void normal(uintptr_t address) {
+            fenced((void *) address);
+        }
+
+    }
 
 } // namespace intrinsics
 

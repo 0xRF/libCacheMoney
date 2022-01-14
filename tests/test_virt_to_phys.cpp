@@ -92,7 +92,7 @@ using namespace cache;
 //	slice = ptos(paddr, SLICE_BITS);
 //
 //	physicalAddress = utils::get_physical_address((uintptr_t)virtual_addresses[i]);
-//	cacheSet = l3::get_physical_address_cache_set(physicalAddress);
+//	cacheSet = l3::get_physical_cache_set(physicalAddress);
 //	pSlice = l3::get_physical_slice(physicalAddress);
 //
 //	printf("element pfn: 0x%llx - 0x%llx\n", paddr, physicalAddress);
