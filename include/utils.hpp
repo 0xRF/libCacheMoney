@@ -48,6 +48,8 @@ void cycle_wait(uint64_t delay);
 
 uint32_t get_page_index(uintptr_t virtualAddress);
 
+constexpr int strtoi(const char *s);
+
 
 
 } // namespace utils

@@ -31,7 +31,7 @@ uint64_t get_memory_baseline_speed(uint64_t iterations) {
 
   for (uint64_t i = 0; i < iterations; i++) {
 	intrinsics::clflush(page_start);
-	uint64_t time = intrinsics::memaccesstime(page_start);
+	uint64_t time = intrinsics::memaccesstime::fenced(page_start);
 	times.push_back(time);
   }
   delete pTest;
@@ -91,6 +91,21 @@ size_t get_address_tag(uintptr_t address) {
   auto bits = std::bitset<sizeof(uintptr_t)*8>(address);
   auto computed = (bits & get_tag_bitmask());
   return (computed >> 12).to_ulong();
+}
+
+constexpr int strtoi(const char *s) {
+  int sum = 0;
+  char ch;
+  char sign = *s;
+  if (*s=='-' || *s=='+')
+	s++;
+  while ((ch = *s++) >= '0' && ch <= '9') {
+	sum = sum*10 - (ch - '0');
+  }
+  if (sign!='-') {
+	sum = -sum;
+  }
+  return sum;
 }
 
 }

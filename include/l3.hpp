@@ -7,7 +7,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <nmmintrin.h>
 #include <bitset>
+#include <bit>
 
 namespace cache::l3 {
 uint64_t speed(uint64_t iterations = 10000);
@@ -32,12 +34,12 @@ inline uint64_t get_physical_address_cache_set(uintptr_t physicalAddress) {
   return (physicalAddress >> get_line_bits()) & (get_cache_sets() - 1);
 }
 
-//https://github.com/cgvwzq/evsets/blob/master/browser/virt_to_phys.c#L96-L97/
-//TODO fix as this is slower peformance wise, will also introduce 2 unessecary cache miss
-inline uint64_t physical_to_slice(uintptr_t physicalAddress) {
-  std::bitset<64> phyBits = physicalAddress;
-  const static std::bitset<64> mask = 0x3cccc93100ULL;
-  return (mask & phyBits).count()%2;
+//  return std::popcount(physicalAddress & 0x3cccc93100ULL)% 2; // TODO add paper reference
+inline uint64_t get_physical_slice(uintptr_t physicalAddress) {
+  uint64_t ret = __builtin_popcount(0x3cccc93100ULL & physicalAddress)%2;
+  ret = (ret << 1) | __builtin_popcount(0x2eb5faa880ULL & physicalAddress)%2;
+  ret = (ret << 1) | __builtin_popcount(0x1b5f575440ULL & physicalAddress)%2;
+  return ret;
 }
 
 } // namespace cache

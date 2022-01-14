@@ -36,8 +36,6 @@ uintptr_t get_page_start(uintptr_t address) {
   return address & ~(getpagesize() - 1);
 }
 
-
-
 bool has_privilege() {
   uid_t uid = getuid(), euid = geteuid();
   return (euid <= 0 || uid!=euid);
@@ -53,6 +51,10 @@ bool has_privilege() {
 //  * Bit  62    page swapped
 //  * Bit  63    page present
 //TODO wrap an api around this
+uintptr_t get_physical_address(void *virtualAddress) {
+  return get_physical_address((uintptr_t)virtualAddress);
+}
+
 uintptr_t get_physical_address(uintptr_t virtualAddress) {
   static const char *FILE = "/proc/self/pagemap";
 

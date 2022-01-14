@@ -34,7 +34,7 @@ bool eviction_set_builder::test(elem<eviction_set_element> *S, size_t a, uint64_
 
   //Do the second iteration
   while (evs->next) {
-	time = intrinsics::memaccesstime((uintptr_t)evs->next);
+	time = intrinsics::memaccesstime::fenced((uintptr_t)evs->next);
 	intrinsics::lfence();
 	evs->value.time = time;
 	evs = evs->next;

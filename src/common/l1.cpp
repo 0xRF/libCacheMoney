@@ -15,7 +15,7 @@ namespace cache::l1 {
         uintptr_t page_start = utils::get_page_start((uintptr_t) pTest);
 
         for (uint64_t i = 0; i < iterations; i++) {
-            uint64_t time = intrinsics::memaccesstime(page_start);
+            uint64_t time = intrinsics::memaccesstime::fenced(page_start);
             times.push_back(time);
         }
         delete pTest;

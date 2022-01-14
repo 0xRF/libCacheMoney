@@ -40,7 +40,7 @@ bool flush_reload::attack(uint64_t offset, std::optional<uint64_t> baseline,
     intrinsics::clflush(m_address);
     if (trigger)
       trigger();
-    auto time = intrinsics::memaccesstime(m_address);
+    auto time = intrinsics::memaccesstime::fenced(m_address);
     m_results.push_back(time);
     if (time - offset < *baseline) {
       return true;

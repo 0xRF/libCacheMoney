@@ -9,12 +9,12 @@
 #include <cstdint>
 #include <elem.hpp>
 
-struct eviction_set_element{
+struct eviction_set_element {
   uint32_t set;
   uint64_t time;
 };
 
-class eviction_set_builder{
+class eviction_set_builder {
 
 public:
   /// Implementation of "Theory and Practice of Finding Eviciton Sets" proposed Test 3
@@ -24,12 +24,8 @@ public:
   /// \return true if S is an eviction set, false otherewise
   bool test(elem<eviction_set_element>*, size_t a, uint64_t threshold);
 
+
 private:
-
-
-
-
-
 
 };
 

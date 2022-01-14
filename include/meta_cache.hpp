@@ -43,7 +43,7 @@ namespace cache_money {
         inline uint64_t measure(uint32_t set) {
             uint64_t max = 0;
             for (int block = 0; block < assoc(); block++) {
-                uint64_t time = intrinsics::memaccesstime(m_mapped[set + block * set_count()]);
+                uint64_t time = intrinsics::memaccesstime::fenced(m_mapped[set + block * set_count()]);
                 if (time > max)
                     max = time;
             }
@@ -72,7 +72,7 @@ namespace cache_money {
 
             uint64_t count = 0;
             for (int block = 0; block < assoc(); block++) {
-                uint64_t time = intrinsics::memaccesstime(m_mapped[set + m_sbox[block] * set_count()]);
+                uint64_t time = intrinsics::memaccesstime::fenced(m_mapped[set + m_sbox[block] * set_count()]);
                 if (time > baseline+extraSlot)
                     count++;
             }
@@ -127,7 +127,7 @@ namespace cache_money {
             for (size_t i = 0; i < iterations; i++) {
                 for (size_t cache_set = 0; cache_set < set_count(); cache_set++)
                     for (int block = 0; block < assoc(); block++) {
-                        uint64_t time = intrinsics::memaccesstime(m_mapped[cache_set + block * set_count()]);
+                        uint64_t time = intrinsics::memaccesstime::fenced(m_mapped[cache_set + block * set_count()]);
                         if (time < m_baseline)
                             m_baseline = time;
                     }
