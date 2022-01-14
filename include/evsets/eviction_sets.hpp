@@ -18,7 +18,7 @@ typedef elem<uintptr_t> element;
 namespace eviction_sets {
 
 
-void accsess_prime_pattern(const std::array<element*, cache::l3::assoc()>& evset, element* target){
+void accsess_prime_pattern(const std::array<element*, cache::l3::assoc()>& evset){
   const static size_t REPEATS = 3;
   const static size_t STRIDES = 4;
 
