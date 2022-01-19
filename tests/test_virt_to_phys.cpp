@@ -113,21 +113,17 @@ bool test_l3_evset(const std::array<element *, l3::assoc()> &evset, element *tar
   std::vector<uint64_t> times{};
   for (int i = 0; i < 500; i++) {
 	//Reload target into the cache
-	for(int j = 0; j < 10; j++)
-	intrinsics::memaccesstime::fenced(target);
-
-	accsess_prime_pattern(evset);
-	accsess_prime_pattern(evset);
-	accsess_prime_pattern(evset);
-	accsess_prime_pattern(evset);
+	for (int j = 0; j < 10; j++)
+	  intrinsics::memaccesstime::fenced(target);
+	accsess_prime_pattern_safe(evset);
 	times.push_back(intrinsics::memaccesstime::fenced(target));
   }
 
   int cnt = 0;
-  for(auto time : times)
-	if(time > 50) // 50 is approx a value which worked on the prime+scope implemenation consitently
+  for (auto time : times)
+	if (time > 50) // 50 is approx a value which worked on the prime+scope implemenation consitently
 	  cnt++;
-  std::cout << "Possibly evicted: " << cnt << "/500"<< std::endl;
+  std::cout << "Possibly evicted: " << cnt << "/500" << std::endl;
 
   return true;
 
@@ -148,13 +144,13 @@ int main() {
 
   time_point t1 = std::chrono::high_resolution_clock::now();
 
-  auto S = eviction_sets::construct_eviction_set(target, buffer, SIZE);
+  auto S = eviction_sets::construct_inclusive_brute_force(target, buffer, SIZE);
+  test_l3_evset(S, target);
 
   time_point t2 = high_resolution_clock::now();
   milliseconds ms = duration_cast<milliseconds>(t2 - t1);
   std::cout << ms.count() << " ms\n";
 
-  test_l3_evset(S, target);
 
 
 //  auto S = eviction_sets::construct_inclusive_brute_force(buffer, (SIZE)/sizeof(element), l1::speed());
@@ -197,7 +193,7 @@ int main() {
 //	std::cout << "evset countbits " << ns.count() << " ns\n";
 //  }
 //  {
-//	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+//	std::chrono::high_resolution_clock::time_poibrutent t1 = std::chrono::high_resolution_clock::now();
 //	for (uint32_t i = 0; i < 100000; i++) {
 //	  std::popcount(i);
 //	}

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(tests)
 
-include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
+include(${CMAKE_HOME_DIRECTORY}/cmake/CPM.cmake)
 include(CTest)
 
 
