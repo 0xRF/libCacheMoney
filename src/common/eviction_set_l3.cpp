@@ -80,21 +80,17 @@ linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize
 	}
 
 	if (!set_valid(set, victim)) {
-	  if (len < 128)
+	  if (len < 1024)
 		[[likely]]
 			len++;
+	  else
+		set_reduce(set, guessPool, victim);
 	} else
 	  break;
 	attempts++;
   }
 
-//  traverse_zigzag_victim(set.start, victim);
-//  do {
-//
-//  } while (!set_valid(set, victim) && !set_valid(set, victim));
-
   std::cout << "Set Size " << set.length << std::endl;
-
   std::cout << "Did it work: " << set_valid(set, victim) << std::endl;
   intrinsics::maccess::double_fenced(victim);
   set_reduce(set, guessPool, victim);
@@ -104,51 +100,45 @@ linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize
   return set;
 }
 
-void eviction_set_l3::set_add(linked_list &set, linked_list& guessPool, std::vector<node *> &guessPool, uintptr_t victim) {
+void eviction_set_l3::set_add(linked_list &set, linked_list &guessPool, uintptr_t victim) {
 
   for (uint32_t attempt = 0; attempt < MAX_RETRIES; attempt++) {
+
 	//put in cache
-	intrinsics::maccess::normal(guessPool.back());
+	intrinsics::maccess::normal(guessPool.head);
 	intrinsics::lfence();
 	intrinsics::mfence();
 	uint64_t time = intrinsics::memaccesstime::normal(victim);
 
 	if (time > THRESHOLD - 20 && time < 2*THRESHOLD) [[unlikely]] {
-
-	  if (set.length!=0)
-		[[likely]]
-			list_push_back(&set, guessPool.back());
-	  else
-		[[unlikely]]
-			list_init(&set, guessPool.back());
+	  list_push_back(&set, list_pop_back(&guessPool));
 	}
-	guessPool.pop_back();
-
-	if (guessPool.empty())
-	  return;
+	if (guessPool.length==0) [[unlikely]] {
+	  throw std::runtime_error("Should not be possible");
+	}
   }
-
 }
 
-///
-/// \param set
-/// \param victim
-/// \return false if the reduction
-void eviction_set_l3::set_reduce(linked_list &set, uintptr_t victim) {
+void eviction_set_l3::set_reduce(linked_list &set, linked_list &guesspool, uintptr_t victim) {
 
   const static size_t IDEAL_SIZE = l3::assoc();
   const static size_t MIN_SIZE = l3::assoc();
+  size_t intialSize = set.length;
 
   traverse_zigzag_victim(set.start, victim);
   traverse_zigzag_victim(set.start, victim);
-  bool bIntiallyvalid = set_valid(set, victim);
+  if(!set_valid(set, victim))
+	return;
 
   node *start = set.start;
   while (set.length > IDEAL_SIZE && start!=set.start) {
 	node *tmp = list_pop_front(&set);
-	if (!set_valid(set, victim) && bIntiallyvalid)
+//	  if (!set_valid(set, victim) && bIntiallyValid) [[likely]]
+	if (set_valid(set, victim)) [[likely]]
+		  list_push_front(&guesspool, tmp); //Re add the address which is not valid to the guess pool
+	else
 	  list_push_back(&set, tmp);
   }
 
-  printf("Reduced list to size of %zu\n", set.length);
+  printf("Reduced list to size of %zu from %zu\n", set.length, intialSize);
 }
