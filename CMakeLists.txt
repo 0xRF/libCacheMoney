@@ -25,6 +25,7 @@ add_library(libCacheMoney SHARED
         src/common/l3.cpp
         src/common/eviction_set_builder.cpp
         src/common/eviction_set_l3.cpp
+        src/common/ps_evset.cpp
         include/linked_list.hpp
         )
 

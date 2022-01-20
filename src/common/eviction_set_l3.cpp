@@ -38,8 +38,9 @@ bool eviction_set_l3::set_valid(linked_list &evset, uintptr_t victim) {
 
   if (ret) [[unlikely]] {
 	printf("Test succ w/ size of %zu\n", evset.length);
+	return true;
   }
-  return time/evset.length > THRESHOLD;
+  return false;
 }
 
 linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize, uintptr_t victim) {
@@ -55,7 +56,7 @@ linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize
 //  for (size_t i = 0; i < bufferSize/sizeof(uintptr_t); i++)
 //	guessPool.push_back((node *)(bufferStart + i*sizeof(uintptr_t)));
 
-  for (size_t i = 0; i < bufferSize/l3::get_page_size() - l3::get_page_bits()*2; i++)
+  for (size_t i = 0; i < bufferSize/l3::get_page_size() - l3::get_page_size()*2; i++)
 	list_push_back(&guessPool, (node *)(bufferStart + i*l3::get_page_size()));
 
   //Shuffle the elements to prevent cache lines being predicted and loaded
@@ -92,11 +93,11 @@ linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize
 	attempts++;
   }
 
-  //set_valid(set,victim);
+  set_valid(set, victim);
   intrinsics::maccess::double_fenced(victim);
   set_reduce(set, guessPool, victim);
   intrinsics::maccess::double_fenced(victim);
-  std::cout << "Did it work: " << set_valid(set, victim) << std::endl;
+  printf("Valid %d\n", set_valid(set, victim));
 
   return set;
 }
@@ -110,6 +111,8 @@ void eviction_set_l3::set_add(linked_list &set, linked_list &guessPool, uintptr_
 	intrinsics::lfence();
 	intrinsics::mfence();
 	uint64_t time = intrinsics::memaccesstime::normal(victim);
+	intrinsics::lfence();
+	intrinsics::mfence();
 
 	if (time > THRESHOLD - 20 && time < 2*THRESHOLD) [[unlikely]] {
 	  list_push_back(&set, list_pop_back(&guessPool));

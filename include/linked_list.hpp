@@ -28,7 +28,7 @@ inline void list_init(linked_list *list, node *node) {
   list->length++;
 }
 
-linked_list list_create(node *start = nullptr) {
+inline linked_list list_create(node *start = nullptr) {
   linked_list l;
   if (start!=nullptr)
 	list_init(&l, start);
