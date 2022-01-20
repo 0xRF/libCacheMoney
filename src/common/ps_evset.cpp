@@ -135,7 +135,7 @@ linked_list brute_force_set(linked_list &guessPool, uintptr_t victim) {
   uint64_t cacheSet = cache::l3::get_physical_cache_set(physicalAddress);
   uint64_t slice = cache::l3::get_physical_slice(physicalAddress);
 
-  uint64_t len = l3::assoc()*12;
+  uint64_t len = l3::assoc()*2;
   do{
   while(set.length != len){
 
