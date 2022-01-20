@@ -15,15 +15,11 @@ using namespace cache;
 bool eviction_set_l3::set_valid(linked_list &evset, uintptr_t victim) {
 
   uint64_t time = 0;
-  uint64_t length = 0;
 
   //Loads Victim into LLC
   intrinsics::maccess::double_fenced(victim);
-  intrinsics::maccess::double_fenced(victim);
 
-  node *ptr = evset.start;
-
-  while (ptr) {
+  for (int i = 0; i < evset.length; i++) {
 
 	//Repeated 4 times in paper code
 	traverse_list_skylake(evset.start);
@@ -34,29 +30,35 @@ bool eviction_set_l3::set_valid(linked_list &evset, uintptr_t victim) {
 	intrinsics::mfence();
 
 	time += intrinsics::memaccesstime::normal(victim);
-	length++;
-
-	ptr = ptr->next;
   }
+  bool ret = time/evset.length > THRESHOLD;
 
-  return time/length > THRESHOLD;
+  if (ret) [[unlikely]] {
+	std::cout << "OMG IT WORKED\n";
+  }
+  return time/evset.length > THRESHOLD;
 }
 
-node *eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize, uintptr_t victim) {
+linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize, uintptr_t victim) {
 
-  std::vector<node *> guessPool;
+  linked_list guessPool = {
+	  .start = nullptr,
+	  .head = nullptr,
+	  .length = 0
+  };
 //  guessPool.reserve(bufferSize/l3::get_page_size());
 
   //As buffer start is aligned to the start of a page, fill up a guess pool with
-  for (size_t i = 0; i < bufferSize/sizeof(uintptr_t); i++)
-	guessPool.push_back((node *)(bufferStart + i*sizeof(uintptr_t)));
+//  for (size_t i = 0; i < bufferSize/sizeof(uintptr_t); i++)
+//	guessPool.push_back((node *)(bufferStart + i*sizeof(uintptr_t)));
 
-  std::cout << guessPool.size() << std::endl;
+  for (size_t i = 0; i < bufferSize/l3::get_page_size() - l3::get_page_bits()*2; i++)
+	list_push_back(&guessPool, (node *)(bufferStart + i*l3::get_page_size()));
 
   //Shuffle the elements to prevent cache lines being predicted and loaded
-  // Might be better to just check for uniqueness and consitnelty generate a random number each time
+  //Might be better to just check for uniqueness and consitnelty generate a random number each time
   //TODO go back to the previous method where it did not require this to be done at runtime
-  std::shuffle(guessPool.begin(), guessPool.end(), std::mt19937(std::random_device()()));
+// std::shuffle(guessPool.begin(), guessPool.end(), std::mt19937(std::random_device()()));
 
   size_t len = l3::assoc();
 
@@ -71,15 +73,19 @@ node *eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize, uint
 	while (set.length < len) {
 	  traverse_zigzag_victim(set.start, victim);
 	  traverse_zigzag_victim(set.start, victim);
+	  if (guessPool.length==0) [[unlikely]]
+		break;
 	  set_add(set, guessPool, victim);
+//		throw std::runtime_error("WTF");
 	}
 
 	if (!set_valid(set, victim)) {
-	  if (len < 128) [[likely]]
+	  if (len < 128)
+		[[likely]]
 			len++;
-	}
-	else
+	} else
 	  break;
+	attempts++;
   }
 
 //  traverse_zigzag_victim(set.start, victim);
@@ -91,14 +97,14 @@ node *eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize, uint
 
   std::cout << "Did it work: " << set_valid(set, victim) << std::endl;
   intrinsics::maccess::double_fenced(victim);
-  set_reduce(set, victim);
+  set_reduce(set, guessPool, victim);
   intrinsics::maccess::double_fenced(victim);
   std::cout << "Did it work: " << set_valid(set, victim) << std::endl;
 
-  return nullptr;
+  return set;
 }
 
-void eviction_set_l3::set_add(linked_list &set, std::vector<node *> &guessPool, uintptr_t victim) {
+void eviction_set_l3::set_add(linked_list &set, linked_list& guessPool, std::vector<node *> &guessPool, uintptr_t victim) {
 
   for (uint32_t attempt = 0; attempt < MAX_RETRIES; attempt++) {
 	//put in cache
@@ -135,7 +141,7 @@ void eviction_set_l3::set_reduce(linked_list &set, uintptr_t victim) {
 
   traverse_zigzag_victim(set.start, victim);
   traverse_zigzag_victim(set.start, victim);
-  bool bIntiallyvalid = set_valid(set,victim);
+  bool bIntiallyvalid = set_valid(set, victim);
 
   node *start = set.start;
   while (set.length > IDEAL_SIZE && start!=set.start) {

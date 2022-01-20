@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cstring>
 #include "linked_list.hpp"
+#include <virt_to_phys.hpp>
 #include <random>
 
 int main() {
@@ -34,7 +35,9 @@ int main() {
 
   time_point t1 = std::chrono::high_resolution_clock::now();
 
-  eviction_set_l3::set_create(bufferStart, EVICT_LLC_SIZE - (bufferStart - (uintptr_t)buffer), target);
+  auto set = eviction_set_l3::set_create(bufferStart, EVICT_LLC_SIZE - (bufferStart - (uintptr_t)buffer), target);
+
+  print_eviction_set_information(&set);
 
   time_point t2 = high_resolution_clock::now();
   milliseconds ms = duration_cast<milliseconds>(t2 - t1);

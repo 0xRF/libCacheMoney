@@ -37,10 +37,22 @@ inline uint64_t get_physical_cache_set(uintptr_t physicalAddress) {
   return (physicalAddress >> get_line_bits()) & (get_cache_sets() - 1);
 }
 
+
+
+inline unsigned int count_bitsf(unsigned long long n) {
+  unsigned int count = 0;
+  while (n) {
+
+    n &= (n - 1);
+    count++;
+  }
+  return count;
+}
+
 inline uint64_t get_physical_slice(uintptr_t physicalAddress) {
-  uint64_t ret = __builtin_popcount(0x3cccc93100ULL & physicalAddress)%2;
-  ret = (ret << 1) | __builtin_popcount(0x2eb5faa880ULL & physicalAddress)%2;
-  ret = (ret << 1) | __builtin_popcount(0x1b5f575440ULL & physicalAddress)%2;
+  uint64_t ret = (uint64_t)(count_bitsf(0x3cccc93100ULL & physicalAddress)%2);
+  ret = (ret << 1) | (uint64_t)(count_bitsf(0x2eb5faa880ULL & physicalAddress)%2);
+  ret = (ret << 1) | (uint64_t)(count_bitsf(0x1b5f575440ULL & physicalAddress)%2);
   return ret;
 }
 

@@ -134,16 +134,6 @@ bool verify_eviction_set(const std::array<element *, cache::l3::assoc()> &S) {
   return true;
 }
 
-void print_eviction_set_information(const std::array<element *, cache::l3::assoc()> &S) {
-  for (auto address : S) {
-	uintptr_t phy = utils::get_physical_address((uintptr_t)address);
-	uint64_t set = cache::l3::get_physical_cache_set(phy);
-	uint64_t slice = cache::l3::get_physical_slice(phy);
-	printf("Physical Address 0x%llx\n", phy);
-	printf("Set 0x%llx\n", set);
-	printf("Slice 0x%llx\n\n", slice);
-  }
-}
 
 
 

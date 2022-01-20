@@ -55,29 +55,24 @@ uintptr_t get_physical_address(void *virtualAddress) {
   return get_physical_address((uintptr_t)virtualAddress);
 }
 
-uintptr_t get_physical_address(uintptr_t virtualAddress) {
-  static const char *FILE = "/proc/self/pagemap";
-
-//TOOD utils should be independent of other resources fix this
-  const size_t PAGE_SIZE = cache::l3::get_page_size();
-
-  int fd = open(FILE, O_RDONLY);
-
+//From the evsets repo
+//TODDO add reference
+uintptr_t get_physical_address(uintptr_t vaddr) {
+  const static char *path = "/proc/self/pagemap";
+  int fd = open(path, O_RDONLY);
   if (fd < 0) {
 	return -1;
   }
 
   uintptr_t paddr = -1;
-  uint32_t index = get_page_index(virtualAddress);
-  if (pread(fd, &paddr, sizeof(uintptr_t), index)!=sizeof(uintptr_t)) {
+  uint64_t index = (vaddr/cache::l3::get_page_size())*sizeof(uintptr_t);
+  if (pread(fd, &paddr, sizeof(paddr), index)!=sizeof(paddr)) {
 	return -1;
   }
   close(fd);
   paddr &= 0x7fffffffffffff;
-  //TODO utils should be indepndent of other page resousces
-  return (paddr << cache::l3::get_page_bits() | (virtualAddress & (PAGE_SIZE - 1)));
+  return (paddr << cache::l3::get_page_bits()) | (vaddr & (cache::l3::get_page_size() - 1));
 }
-
 uint32_t get_page_index(uintptr_t virtualAddress) {
   return (virtualAddress/getpagesize())*sizeof(uintptr_t);
 }
