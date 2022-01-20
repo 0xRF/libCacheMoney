@@ -14,6 +14,9 @@ using namespace cache;
 
 bool eviction_set_l3::set_valid(linked_list &evset, uintptr_t victim) {
 
+  if (evset.length < l3::assoc())
+	return false;
+
   uint64_t time = 0;
 
   //Loads Victim into LLC
@@ -34,7 +37,7 @@ bool eviction_set_l3::set_valid(linked_list &evset, uintptr_t victim) {
   bool ret = time/evset.length > THRESHOLD;
 
   if (ret) [[unlikely]] {
-	std::cout << "OMG IT WORKED\n";
+	printf("Test succ w/ size of %zu\n", evset.length);
   }
   return time/evset.length > THRESHOLD;
 }
@@ -69,18 +72,17 @@ linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize
   };
 
   uint64_t attempts = 0;
-  while (attempts < MAX_RETRIES) {
+  while (attempts < 256) {
 	while (set.length < len) {
 	  traverse_zigzag_victim(set.start, victim);
 	  traverse_zigzag_victim(set.start, victim);
-	  if (guessPool.length==0) [[unlikely]]
-		break;
+//	  if (guessPool.length==0) [[unlikely]]
+//		break;
 	  set_add(set, guessPool, victim);
-//		throw std::runtime_error("WTF");
 	}
 
 	if (!set_valid(set, victim)) {
-	  if (len < 1024)
+	  if (len < l3::assoc()*2)
 		[[likely]]
 			len++;
 	  else
@@ -90,8 +92,7 @@ linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize
 	attempts++;
   }
 
-  std::cout << "Set Size " << set.length << std::endl;
-  std::cout << "Did it work: " << set_valid(set, victim) << std::endl;
+  //set_valid(set,victim);
   intrinsics::maccess::double_fenced(victim);
   set_reduce(set, guessPool, victim);
   intrinsics::maccess::double_fenced(victim);
@@ -127,14 +128,15 @@ void eviction_set_l3::set_reduce(linked_list &set, linked_list &guesspool, uintp
 
   traverse_zigzag_victim(set.start, victim);
   traverse_zigzag_victim(set.start, victim);
-  if(!set_valid(set, victim))
+  if (!set_valid(set, victim))
 	return;
 
   node *start = set.start;
   while (set.length > IDEAL_SIZE && start!=set.start) {
 	node *tmp = list_pop_front(&set);
 //	  if (!set_valid(set, victim) && bIntiallyValid) [[likely]]
-	if (set_valid(set, victim)) [[likely]]
+	if (set_valid(set, victim))
+	  [[likely]]
 		  list_push_front(&guesspool, tmp); //Re add the address which is not valid to the guess pool
 	else
 	  list_push_back(&set, tmp);

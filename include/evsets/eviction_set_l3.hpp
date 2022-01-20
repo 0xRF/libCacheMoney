@@ -14,7 +14,7 @@ namespace eviction_set_l3 {
 #define LLC 111
 #define RAM 250
 #define THRESHOLD 203
-#define MAX_RETRIES 128
+#define MAX_RETRIES 32
 
 linked_list set_create(uintptr_t bufferStart, size_t bufferSize, uintptr_t victim);
 void set_add(linked_list &set, linked_list& guessPool, uintptr_t victim);
