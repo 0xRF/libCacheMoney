@@ -86,6 +86,9 @@ linked_list eviction_set_l3::set_create(uintptr_t bufferStart, size_t bufferSize
 	  if (len < l3::assoc()*2)
 		[[likely]]
 			len++;
+
+	  if (len > l3::assoc()*2)
+		set_reduce(set, guessPool, victim);
 	  else
 		set_reduce(set, guessPool, victim);
 	} else

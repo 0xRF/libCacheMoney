@@ -29,6 +29,9 @@ extend:
 	set_add(set, guessPool, victim);
   }
 
+  intrinsics::maccess::double_fenced(victim);
+  intrinsics::maccess::double_fenced(victim);
+
   if(!set_valid(set, victim)) {
 	if(++length < l3::assoc()*2) {
 //	  length++;
@@ -36,16 +39,17 @@ extend:
 	}
 	else
 	{
-	  set_reduce(set, guessPool, victim);
 	}
   }
 
-//  set_reduce(set, guessPool, victim);
+  intrinsics::maccess::double_fenced(victim);
+  intrinsics::maccess::double_fenced(victim);
+  set_reduce(set, guessPool, victim);
 //
-//  intrinsics::maccess::double_fenced(victim);
-//  intrinsics::maccess::double_fenced(victim);
-//  if(!set_valid(set, victim))
-//	goto extend;
+  intrinsics::maccess::double_fenced(victim);
+  intrinsics::maccess::double_fenced(victim);
+  if(!set_valid(set, victim))
+	goto extend;
 
   return set;
 }
@@ -135,7 +139,7 @@ linked_list brute_force_set(linked_list &guessPool, uintptr_t victim) {
   uint64_t cacheSet = cache::l3::get_physical_cache_set(physicalAddress);
   uint64_t slice = cache::l3::get_physical_slice(physicalAddress);
 
-  uint64_t len = l3::assoc()*2;
+  uint64_t len = l3::assoc();
   do{
   while(set.length != len){
 

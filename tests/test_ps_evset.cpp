@@ -35,7 +35,8 @@ int main() {
 
   time_point t1 = std::chrono::high_resolution_clock::now();
 
-  auto set = brute_force_set(guessPool, target);
+  auto set = set_create(guessPool, target);
+//  auto set = brute_force_set(guessPool, target);
   intrinsics::maccess::double_fenced(target);
   intrinsics::maccess::double_fenced(target);
   printf("Got the set is it valid %d\n", set_valid(set, target));
