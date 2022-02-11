@@ -72,37 +72,63 @@ std::array<element *, l3::assoc()> construct_inclusive_brute_force(uintptr_t vic
   uint32_t set = l3::get_physical_cache_set(physicalAddress);
   uint32_t slice = l3::get_physical_slice(physicalAddress);
 
-  element *guess = start;
+  uintptr_t guess = (uintptr_t)start + 4096;
   uint64_t guessSet = -1, guessSlice = -1;
   uintptr_t guessPhysicalAddress = -1;
 
-  while (size < l3::assoc()) {
-	while (set!=guessSet || guessSlice!=slice || guessPhysicalAddress==physicalAddress) {
-//	  if ((uintptr_t)guess >= (uintptr_t)guess + SIZE)
-//		[[unlikely]]
-//			throw std::runtime_error("out of bounds");
-//	  else [[likely]] {
-	  guess++;
+  printf("Slice: %d\n", slice);
+  printf("Set : %d\n", set);
+  printf("Phys: 0x%llx\n", physicalAddress);
+
+  for(int i = 0 ; i < l3::assoc(); i++){
+
+	bool bFound = false;
+	while(!bFound){
+	  guess += 4096;
+	  if ((uintptr_t)guess >= (uintptr_t)guess + SIZE)
+		[[unlikely]]
+			throw std::runtime_error("out of bounds");
 	  guessPhysicalAddress = utils::get_physical_address((uintptr_t)guess);
 	  guessSet = l3::get_physical_cache_set(guessPhysicalAddress);
 	  guessSlice = l3::get_physical_slice(guessPhysicalAddress);
-//	  }
-	}
-	if (size!=0) [[unlikely]] {
-	  evset[size] = guess;
-	  guess->prev = evset[size - 1];
-	  guess->prev->next = guess;
-	} else {
-	  guess->prev = NULL;
-	  evset[0] = guess;
+
+	  if(set == guessSet)
+		if(guessSlice == slice)
+		  bFound = true;
 	}
 
-	size++;
-	guess++;
-
+	evset[i] = (element*)guess;
   }
+//
+//
+//  while (size < l3::assoc()) {
+//	while (set!=guessSet || guessSlice!=slice || guess == NULL) {
+//	  if ((uintptr_t)guess >= (uintptr_t)guess + SIZE)
+//		[[unlikely]]
+//			throw std::runtime_error("out of bounds");
+////	  else [[likely]] {
+//	  guess+=4096;
+//	  guessPhysicalAddress = utils::get_physical_address((uintptr_t)guess);
+//	  guessSet = l3::get_physical_cache_set(guessPhysicalAddress);
+//	  guessSlice = l3::get_physical_slice(guessPhysicalAddress);
+////	  }
+//	}
 
-  evset[evset.size() - 1]->next = NULL;
+//	evset[size++] = (element*)guess;
+//	size++;
+//	guess+=4096;
+//	if (size!=0) [[unlikely]] {
+//	  evset[size] = (element*)guess;
+////	  guess->prev = evset[size - 1];
+////	  guess->prev->next = guess;
+//	} else {
+////	  guess->prev = NULL;
+//	  evset[0] = (element*)guess;
+//	}
+
+//  }
+
+//  evset[evset.size() - 1]->next = NULL;
   return evset;
 }
 

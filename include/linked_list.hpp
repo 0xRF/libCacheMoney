@@ -19,7 +19,6 @@ struct linked_list {
   node *head;
   size_t length;
 };
-
 inline void list_init(linked_list *list, node *node) {
   list->start = node;
   list->start->prev = nullptr;

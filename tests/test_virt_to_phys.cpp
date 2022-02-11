@@ -27,43 +27,63 @@ using namespace cache;
 
 bool test_l3_evset(const std::array<element *, l3::assoc()> &evset, uintptr_t target) {
 
+
+
   //Wait until evicted from te cache
   uint64_t time = 0;
   std::vector<uint64_t> times{};
-  for (int i = 0; i < 500; i++) {
-	//Reload target into the cache
-	for (int j = 0; j < 10; j++)
-	  intrinsics::memaccesstime::fenced(target);
-	accsess_prime_pattern_safe(evset);
-	times.push_back(intrinsics::memaccesstime::fenced(target));
+  for (int i = 0; i < 10; i++) {
+	accsess_prime_pattern(evset);
+	accsess_prime_pattern(evset);
+	accsess_prime_pattern(evset);
+	accsess_prime_pattern(evset);
+	intrinsics::memaccesstime::normal(evset[0]);
+	intrinsics::memaccesstime::normal(evset[0]);
+	intrinsics::memaccesstime::normal(target);
+	time = intrinsics::memaccesstime::normal(evset[0]);
+
+	std::cout << time << ' ';
+//	times.push_back(intrinsics::memaccesstime::fenced(target));
   }
 
-  int cnt = 0;
-  for (auto time : times)
-	if (time > 50) // 50 is approx a value which worked on the prime+scope implemenation consitently
-	  cnt++;
-  std::cout << "Possibly evicted: " << cnt << "/500" << std::endl;
+  for(auto elem : evset){
+	uintptr_t physicalAddress = utils::get_physical_address((uintptr_t)elem);
+	uint32_t set = l3::get_physical_cache_set(physicalAddress);
+	uint32_t slice = l3::get_physical_slice(physicalAddress);
+
+	printf("Slice: %d\n", slice);
+	printf("Set : %d\n", set);
+	printf("Phys: 0x%llx\n", physicalAddress);
+  }
+  printf("\n");
 
   return true;
-
 }
 
 int main() {
+
   using namespace std::chrono;
   typedef high_resolution_clock::time_point time_point;
 
+  uint32_t meme = 0 ;
   //The L3 cache size is 8MB so double that
   const static size_t SIZE = 1024*1024*8*4;
   element *buffer = (element *)malloc(SIZE);
   std::cout << "malloc'd: " << malloc_usable_size(buffer) << '/' << SIZE << std::endl;
   memset(buffer, 0xCC, SIZE);
 
-  uintptr_t target = (uintptr_t)buffer;
-  buffer++;
+  uintptr_t target = (uintptr_t)&meme;
+  buffer = (element*)((uintptr_t)buffer + (target & (4096-1)));
 
   time_point t1 = std::chrono::high_resolution_clock::now();
 
   auto S = eviction_sets::construct_inclusive_brute_force(target, buffer, SIZE);
+
+  printf("set: ");
+  for(auto a : S)
+	printf("0x%llx ", a);
+  printf("\n");
+
   test_l3_evset(S, target);
 
   time_point t2 = high_resolution_clock::now();

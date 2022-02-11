@@ -12,6 +12,9 @@ using namespace cache;
 
 int main() {
 
+
+
+  return 0;
   using namespace std::chrono;
   typedef high_resolution_clock::time_point time_point;
 
@@ -31,7 +34,7 @@ int main() {
   linked_list guessPool = {};
 
   for (size_t i = 0; i < bufferSize/l3::get_page_size() - l3::get_page_size()*2; i++)
-	list_push_back(&guessPool, (node *)(bufferStart + i*l3::get_page_size()));
+	list_push_back(&guessPool, (node *)(bufferStart + (target & (4096-1))+ i*l3::get_page_size()));
 
   time_point t1 = std::chrono::high_resolution_clock::now();
 
@@ -39,8 +42,8 @@ int main() {
 //  auto set = brute_force_set(guessPool, target);
   intrinsics::maccess::double_fenced(target);
   intrinsics::maccess::double_fenced(target);
-  printf("Got the set is it valid %d\n", set_valid(set, target));
-  print_eviction_set_information(&set);
+  printf("Got the set is it valid %d\n\n set size %d\n", set_valid(set, target), set.length);
+//  print_eviction_set_information(&set);
 
   time_point t2 = high_resolution_clock::now();
   milliseconds ms = duration_cast<milliseconds>(t2 - t1);
